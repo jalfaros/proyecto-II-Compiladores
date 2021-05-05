@@ -31,8 +31,10 @@ fragment MENOR : '<'                                                        ;
 
 ROPERATOR   : MENOR | MAYOR | IGUALES | DIFERENTE | MENORIGU | MAYORIGU ;
 
-STYPE     : 'boolean' | 'char' | 'int' | 'string'                        ;
-
+BOOLEAN: 'boolean';
+CHAR   : 'char';
+INT    : 'int';
+STRING : 'string';
 
 fragment AND         : '&&'                                                      ;
 fragment OR          : '||'                                                      ;
@@ -57,7 +59,10 @@ INTLITERAL       : DIGIT (DIGIT)* ;
 
 REALLITERAL      : DIGIT (DIGIT)* PUNTO (DIGIT)* | PUNTO DIGIT (DIGIT)* ;
 
-BOOLITERAL      : 'true' | 'false' ;
+TRUE: 'true';
+FALSE: 'false';
+
+BOOLITERAL      : TRUE | FALSE ;
 
 STRINGLITERAL    : COMI (PRINTABLE)* COMI ;
 

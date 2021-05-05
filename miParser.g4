@@ -7,24 +7,24 @@ options {
 program  : ( statement )*                                                                               #programAST;
 
 statement:
-  variableDeclaration PyCOMA
-  | classDeclaration PyCOMA
-  | assigment PyCOMA
-  | arrayAssignment PyCOMA
-  | printStatement PyCOMA
-  | ifStatement
-  | whileStatement
-  | returnStatement PyCOMA
-  | funtionDeclaration
-  | block                                                                                               #statementAST;
+    variableDeclaration PyCOMA                                                                          #variableDeclStaAST
+    | classDeclaration PyCOMA																			#classDeclStaAST
+    | assigment PyCOMA																					#assignStaAST
+    | arrayAssignment PyCOMA																			#arrAsignStaAST
+    | printStatement PyCOMA																			    #printStaAST
+    | ifStatement																						#ifStaAST
+    | whileStatement																					#whileStaAST
+    | returnStatement PyCOMA																			#returnStaAST
+    | funtionDeclaration																				#functionDeclStaAST
+    | block																							    #blockStaAST;
 
 block                     : KEYIZQ ( statement )* KEYDER 												#blockAST;
 
 funtionDeclaration        : type ID PIZQ ( formalParams )? PDER block 									#functionDeclAST;
 
-formalParams        : formalParam ( COMA formalParam)* 													#fParamAST;
+formalParams        : formalParam ( COMA formalParam)* 													#fParamsAST;
 
-formalParam         : type ID																															#fParamsAST;
+formalParam         : type ID																			#fParamAST;
 
 whileStatement      : WHILE PIZQ expression PDER block 													#whileStmmtAST;
 
@@ -36,13 +36,18 @@ printStatement      : PRINT expression 																	#printStmntAST;
 
 classDeclaration    : CLASS ID KEYIZQ (classVariableDeclaration)* KEYDER							    #classDelcAST;
 
-classVariableDeclaration : STYPE ID (ASSIGN expression)?                                                #classVariableDeclAST;
+classVariableDeclaration : stype ID (ASSIGN expression)?                                                #classVariableDeclAST;
 
 variableDeclaration : type ID (ASSIGN expression)?                                       	            #variableDeclAST;
 
-type                : STYPE | arrayType | ID															#typeDeclAST;
 
-arrayType           : STYPE PCIZQ PCDER																	#arrTypeAST;
+type                : stype                                                                             #stypeTypeAST
+                    | arrayType                                                                         #arrtypeTypeAST
+                    | ID                                                                                #idTypeAST;
+
+stype               : BOOLEAN | CHAR | INT | STRING                                                     #stypeAST;
+
+arrayType           : stype PCIZQ PCDER																	#arrTypeAST;
 
 assigment           : ID (PUNTO ID)? ASSIGN expression 													#asssignAST;
 
@@ -55,22 +60,22 @@ simpleExpression : term (AOP term)* 																	#simpleExpressionAST;
 term             : factor (MOP factor)* 																#termAST;
 
 factor           :
-    literal                   |
-    ID (PUNTO ID)?            |
-    funtionCall               |
-    arrayLookup               |
-    arrayLength               |
-    subExpression             |
-    arrayAllocationExpression |
-    allocationExpression      |
-    unary 																								#factoAST;
+    literal                                                                                             #literalFactAST
+    | ID (PUNTO ID)?                                                                                    #puntIdFactAST
+    | funtionCall                                                                                       #funtionCallFactAST
+    | arrayLookup                                                                                       #arrayLokupFactAST
+    | arrayLength                                                                                       #lengthFactAST
+    | subExpression                                                                                     #subExpressionFactAST
+    | arrayAllocationExpression                                                                         #arrayAlloExpreFactAST
+    | allocationExpression                                                                              #allocaExpreFactAST
+    | unary 																						    #unaryFactAST;
 
 
 unary                     : (UNARY) (expression)* 														#unaryAST;
 
 allocationExpression      : NEW ID PIZQ PDER 															#allocationExprAST;
 
-arrayAllocationExpression : NEW STYPE PCIZQ expression PCDER 											#arrAllocationExprAST;
+arrayAllocationExpression : NEW stype PCIZQ expression PCDER 											#arrAllocationExprAST;
 
 subExpression    : PIZQ expression PDER                                                                 #subExprAST;
 
@@ -82,4 +87,5 @@ arrayLookup      : ID PCIZQ expression                                          
 
 arrayLength      : ID PUNTO LENGTH 															            #arrLengthAST;
 
-literal          : INTLITERAL  | REALLITERAL | BOOLITERAL | STRINGLITERAL 								#literalAST;
+literal          : INTLITERAL | REALLITERAL | BOOLITERAL | STRINGLITERAL                                #literalAST;
+
