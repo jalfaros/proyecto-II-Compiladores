@@ -24,7 +24,7 @@ funtionDeclaration        : type ID PIZQ ( formalParams )? PDER block 									#
 
 formalParams        : formalParam ( COMA formalParam)* 													#fParamsAST;
 
-formalParam         : type ID																			#fParamAST;
+formalParam         : type ID																			#fParamsAST;
 
 whileStatement      : WHILE PIZQ expression PDER block 													#whileStmmtAST;
 
