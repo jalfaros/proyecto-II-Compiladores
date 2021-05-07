@@ -24,7 +24,7 @@ funtionDeclaration        : type ID PIZQ ( formalParams )? PDER block 									#
 
 formalParams        : formalParam ( COMA formalParam)* 													#fParamsAST;
 
-formalParam         : type ID																			#fParamsAST;
+formalParam         : type ID																			#fParamAST;
 
 whileStatement      : WHILE PIZQ expression PDER block 													#whileStmmtAST;
 
@@ -36,7 +36,7 @@ printStatement      : PRINT expression 																	#printStmntAST;
 
 classDeclaration    : CLASS ID KEYIZQ (classVariableDeclaration)* KEYDER							    #classDelcAST;
 
-classVariableDeclaration : stype ID (ASSIGN expression)?                                                #classVariableDeclAST;
+classVariableDeclaration : stype ID (ASSIGN expression)? PyCOMA                                         #classVariableDeclAST;
 
 variableDeclaration : type ID (ASSIGN expression)?                                       	            #variableDeclAST;
 
@@ -53,11 +53,11 @@ assigment           : ID (PUNTO ID)? ASSIGN expression 													#asssignAST;
 
 arrayAssignment     : ID PCIZQ expression PCDER ASSIGN expression 									    #arrAssignAST;
 
-expression       : simpleExpression (ROPERATOR simpleExpression)* 										#expressionAST;
+expression       : simpleExpression (ROPERATOR simpleExpression)* 							         	#expressionAST;
 
-simpleExpression : term (AOP term)* 																	#simpleExpressionAST;
+simpleExpression : term (AOP term)* 														            #simpleExpressionAST;
 
-term             : factor (MOP factor)* 																#termAST;
+term             : factor (MOP factor)* 												                #termAST;
 
 factor           :
     literal                                                                                             #literalFactAST
@@ -71,7 +71,7 @@ factor           :
     | unary 																						    #unaryFactAST;
 
 
-unary                     : (UNARY) (expression)* 														#unaryAST;
+unary                     : UNARY (expression)* 									                    #unaryAST;
 
 allocationExpression      : NEW ID PIZQ PDER 															#allocationExprAST;
 
@@ -87,5 +87,8 @@ arrayLookup      : ID PCIZQ expression                                          
 
 arrayLength      : ID PUNTO LENGTH 															            #arrLengthAST;
 
-literal          : INTLITERAL | REALLITERAL | BOOLITERAL | STRINGLITERAL                                #literalAST;
-
+literal          : INTLITERAL                                                                           #intLiteralAST
+                  | REALLITERAL                                                                         #realLiteralAST
+                  | BOOLITERAL                                                                          #boolLiteralAST
+                  | STRINGLITERAL                                                                       #stringLiteralAST
+                  | CHARLITERAL                                                                         #charListeralAST;

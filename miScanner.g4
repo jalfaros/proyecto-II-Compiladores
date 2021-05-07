@@ -17,6 +17,7 @@ PCIZQ  : '['   ;
 PCDER  : ']'   ;
 PUNTO  : '.'                                                                ;
 COMI   : '"'                                                                ;
+COMISIMPLE : '\''                                                           ;
 
 fragment SUMA        : '+'                                                           ;
 fragment RESTA       : '-'                                                           ;
@@ -43,7 +44,7 @@ fragment MULTIPLI    : '*'                                                      
 
 AOP       : SUMA | RESTA | OR                      ;
 MOP       : MULTIPLI | DIVISION | AND              ;
-UNARY      : SUMA | RESTA | ADMIRACION              ;
+UNARY      : SUMA | RESTA | ADMIRACION             ;
 
 IF      : 'if'    ;
 ELSE   : 'else'      ;
@@ -66,11 +67,12 @@ BOOLITERAL      : TRUE | FALSE ;
 
 STRINGLITERAL    : COMI (PRINTABLE)* COMI ;
 
+CHARLITERAL      : COMISIMPLE (PRINTABLE)? COMISIMPLE;
 
 ID : (UNDERS | LETTER) (UNDERS | LETTER | DIGIT)* ;
 
-fragment PRINTABLE :  DIGIT | LETTER | ' ' | '" "' | ADMIRACION | '#' | '$' | '%' | '&'      |
-                     '\'' | PIZQ | PDER | MULTIPLI | SUMA | COMA | RESTA | PUNTO      |
+fragment PRINTABLE :  DIGIT | LETTER | ' ' | '" "' | ADMIRACION | '#' | '$' | '%' | '&' |
+                     COMISIMPLE | PIZQ | PDER | MULTIPLI | SUMA | COMA | RESTA | PUNTO      |
                      DIVISION | ':' | PyCOMA | MENOR | ASSIGN | MAYOR | '?' | '@'     |
                      PIZQ | '\\' | PCDER | '^' | UNDERS | '`' | KEYIZQ | '|' | KEYDER |
                      '~';

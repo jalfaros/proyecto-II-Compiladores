@@ -353,9 +353,38 @@ public interface miParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitArrLengthAST(miParser.ArrLengthASTContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link miParser#literal}.
+	 * Visit a parse tree produced by the {@code intLiteralAST}
+	 * labeled alternative in {@link miParser#literal}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitLiteral(miParser.LiteralContext ctx);
+	T visitIntLiteralAST(miParser.IntLiteralASTContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code realLiteralAST}
+	 * labeled alternative in {@link miParser#literal}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRealLiteralAST(miParser.RealLiteralASTContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code boolLiteralAST}
+	 * labeled alternative in {@link miParser#literal}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBoolLiteralAST(miParser.BoolLiteralASTContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code stringLiteralAST}
+	 * labeled alternative in {@link miParser#literal}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStringLiteralAST(miParser.StringLiteralASTContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code charListeralAST}
+	 * labeled alternative in {@link miParser#literal}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCharListeralAST(miParser.CharListeralASTContext ctx);
 }

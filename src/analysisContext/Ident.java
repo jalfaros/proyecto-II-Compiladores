@@ -6,17 +6,16 @@ class Ident{
     Token tok;
     String type;
     int nivel;
-    int valor;
-    int nivelActual;
+    int valor; //Este valor hay que cambiarlo
     ParserRuleContext declCtx;
 
 
-    public Ident(Token tok, String type, ParserRuleContext decl, int nivelActual) {
-        this.tok = tok;
-        this.type = type;
-        this.nivel = nivelActual;
-        this.valor = 0;
-        this.declCtx = decl;
+    public Ident(Token t, String tp, ParserRuleContext decl, int nivelActual ) {
+        tok = t;
+        type = tp;
+        nivel = nivelActual;
+        valor = 0;
+        declCtx = decl;
     }
 
     public void setValue(int v){
