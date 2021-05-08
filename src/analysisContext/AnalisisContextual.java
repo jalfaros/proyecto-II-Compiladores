@@ -2,6 +2,9 @@ package analysisContext;
 
 import generated.miParser;
 import generated.miParserBaseVisitor;
+import org.antlr.v4.runtime.Token;
+
+import java.util.Objects;
 
 public class AnalisisContextual extends miParserBaseVisitor {
     private TablaSimbolos tabla;
@@ -14,18 +17,24 @@ public class AnalisisContextual extends miParserBaseVisitor {
     @Override
     public Object visitStype(miParser.StypeContext ctx) {
 
-       if(ctx.getText().equals("int")){
-           return "int";
-       }else if( ctx.getText().equals("char")){
-           return "char";
-       }else if( ctx.getText().equals("string")){
-        return "string";
-       }else if( ctx.getText().equals("boolean")){
-        return "boolean";
-    }else {
-           System.out.println(ctx.getText() + " no es un tipo de dato válido");
-           return null;
-       }
+        switch (ctx.getText()) {
+            case "int":
+                return "int";
+            case "char":
+                return "char";
+            case "string":
+                return "string";
+            case "boolean":
+                return "boolean";
+            default:
+                System.out.println(ctx.getText() + " no es un tipo de dato válido");
+                return null;
+        }
+    }
+
+    @Override
+    public Object visitBooleanLiteral(miParser.BooleanLiteralContext ctx) {
+        return ctx.getText();
     }
 
     @Override
@@ -33,14 +42,10 @@ public class AnalisisContextual extends miParserBaseVisitor {
         return "int";
     }
 
-    @Override
-    public Object visitRealLiteralAST(miParser.RealLiteralASTContext ctx) {
-        return "real";
-    }
 
     @Override
     public Object visitBoolLiteralAST(miParser.BoolLiteralASTContext ctx) {
-        return "boolean";
+       return "boolean";
     }
 
     @Override
@@ -218,25 +223,20 @@ public class AnalisisContextual extends miParserBaseVisitor {
         try {
             Object exprType = (String) this.visit(ctx.expression());
             Object exprType2 = (String) (ctx.type().getText());
+
             if (exprType == null) {
-                System.out.println("La asignación: <" + ctx.expression().getText() + ">, no corresponde a un tipo de dato!");
+                System.out.println("La asignación: \"" + ctx.expression().getText() + "\", no corresponde a un tipo de dato!");
             } else if (!exprType2.equals(exprType)) {
                 System.out.println("A la variable: "+ctx.ID()+" tipo: <" + ctx.type().getText() + "> no se le puede asignar el tipo <" + exprType + ">.");
             }else {
                 Object attr = this.visit(ctx.type());
                 if(attr != null) {
-
-                    //System.out.println(ctx.ID() + " El ID " + attr);
-
                     tabla.insertar(ctx.ID().getSymbol(), (String) attr, ctx);
                 }
             }
         }catch (Exception e){
             Object attr = this.visit(ctx.type());
             if(attr != null) {
-
-               // System.out.println(ctx.ID() + " El ID " + attr);
-
                 tabla.insertar(ctx.ID().getSymbol(), (String) attr, ctx);
             }
         }
@@ -304,37 +304,130 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitExpressionAST(miParser.ExpressionASTContext ctx) {
-
-        String exprType;
-        String exprType2;
+        String exprType = null;
+        String exprType2 = null;
+        String operador = null;
+        Ident id1 = null;
+        Ident id2 = null;
 
         exprType = (String) this.visit(ctx.simpleExpression(0));
 
         for (int i = 1; i < ctx.simpleExpression().size(); i++) {
+            operador = ctx.ROPERATOR().get(0).toString();
 
+            try {
+                exprType2 = (String) this.visit(ctx.simpleExpression(i));
 
-            exprType2 = (String) this.visit(ctx.simpleExpression(i));
-            //System.out.println(ctx.simpleExpression(i).getText() + "Probando");
-            //Aqui debemos de validar todo esto
-            //Validar si lo que vienen son strings y si se quieren multiplicar y todo eso
+                    if ((operador.equals("<") || operador.equals(">") || operador.equals("<=") || operador.equals(">="))) {
+                        assert exprType != null;
+                        if (!exprType.equals("int") || !exprType2.equals("int"))
+                            System.out.println("Error, <"+exprType+"> y <"+exprType2 +">  incompatibles, sólo se permite tipo int en el operador  \"" + operador + "\".");
+                    } else {
+                        assert exprType != null;
+                        if (!exprType.equals(exprType2) && exprType2 != null) {
+                            System.out.println("Error, <"+exprType+"> y <"+exprType2 + "> son incompatibles, sólo se permiten datos de mismo tipo en el operador \"" + operador + "\".");
+                        }else {
+                            id2 = tabla.buscar(ctx.simpleExpression(i).getText());
+                            if(!exprType.equals(id2.type))
+                                System.out.println("Error, <"+exprType+"> y <"+id2.type + "> son incompatibles, sólo se permiten datos de mismo tipo en el operador \"" + operador + "\".");
+                        }
+                    }
 
-            if(!exprType.equals(exprType2))
-                System.out.println("Error, tipos de datos incompatibles, sólo se permite tipo int en el operador relacional");
+            }catch (Exception e){
+                //System.out.println("cai al cath");
+                id1 = tabla.buscar(ctx.simpleExpression(i-1).getText());
+                id2 = tabla.buscar(ctx.simpleExpression(i).getText());
+                if(operador.equals("<") || operador.equals(">") || operador.equals("<=") || operador.equals(">=")){
+                    if(id1 != null && id2 != null){
+
+                        if (!id2.type.equals("int") || !id1.type.equals("int")){
+                            System.out.println("Error,<"+id1.type+"> y <"+ id2.type +"> son tipos de datos incompatibles, sólo se permite tipo int en el operador relacional \""+operador+"\".");
+                        }
+                    }else if( id1 != null){
+                        if( !id1.type.equals("int"))
+                            System.out.println("Error,<"+id1.type+"> y <"+ exprType2 +"> son tipos de datos incompatibles, sólo se permite tipo int en el operador relacional \""+operador+"\".");
+                    }else if( id2 != null){
+                        if( !id2.type.equals("int"))
+                            System.out.println("Error,<"+id2.type+"> y <"+ exprType +"> son tipos de datos incompatibles, sólo se permite tipo int en el operador relacional \""+operador+"\".");
+                    }else if(exprType != null) {
+                        System.out.println("\""+ctx.simpleExpression(i).getText() + "\" no a sido declarado.");
+                    }else if(exprType2 != null){
+                        System.out.println("\""+ctx.simpleExpression(i-1).getText() +  "\" no a sido declarado.");
+                    }
+                } else if(id1 != null && id2 != null ){
+
+                    if (!id2.type.equals(id1.type)){
+                        System.out.println("Error,<"+id1.type+"> y <"+ id2.type +"> son tipos de datos incompatibles, sólo se permite datos de igual tipo.");
+                    }
+                }else if( id1 != null){
+                    if( !id1.type.equals(exprType2))
+                        System.out.println("Error,<"+id1.type+"> y <"+ exprType2 +"> son tipos de datos incompatibles, sólo se permite datos de igual tipo.");
+                }else if( id2 != null){
+                    if( !id2.type.equals(exprType2))
+                        System.out.println("Error,<"+id2.type+"> y <"+ exprType +"> son tipos de datos incompatibles, sólo se permite datos de igual tipo.");
+                }else if(exprType != null) {
+                    System.out.println("\""+ctx.simpleExpression(i).getText() + "\" no a sido declarado.");
+                }else if(exprType2 != null){
+                    System.out.println("\""+ctx.simpleExpression(i-1).getText() +  "\" no a sido declarado.");
+                }
+            }
         }
+        //System.out.println(operador + " operator");
+        if (operador == null)
+            return exprType;
 
-        return exprType;
+        else {
+            return null;
+        }
     }
 
     @Override
     public Object visitSimpleExpressionAST(miParser.SimpleExpressionASTContext ctx) {
 
+
+        String term1 = null;
         String term2;
-        String term1 = (String) this.visit(ctx.term(0));
+        String aOperador = null;
+        Ident id1 = null;
+        Ident id2 = null;
+
+        term1 = (String) this.visit(ctx.term(0));
+
         for (int i = 1; i < ctx.term().size(); i++) {
 
-            term2 = (String) this.visit(ctx.term(i));
+            aOperador = ctx.AOP().get(i-1).getText();
+            System.out.println(aOperador + " el operator");
+
+            try {
+                term2 = (String) this.visit(ctx.term(i));
+
+                System.out.println(term1 + " el termino uno \n");
+
+                System.out.println(term2 + " el termino dos");
+                if (aOperador.equals("||") && term2 != null) {
+                    assert term1 != null;
+                    System.out.println("Entr[e");
+                    if (term1.equals("string") || term1.equals("char") || (term2.equals("string") || term2.equals("char"))){
+                        System.out.println("Error, <"+term1+"> y <"+term2 +"> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + aOperador + "\".");
+                    }
+                }else {
+                    id2 = tabla.buscar(ctx.term(i).getText());
+                    assert term1 != null;
+                    if(!term1.equals(id2.type)){
+                        System.out.println("Error, <"+term1+"> y <"+id2.type +"> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".");
+                    }else if(term1.equals("string") || term1.equals("char")){
+                        System.out.println("Error, <"+term1+"> y <"+id2.type +"> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + aOperador + "\".");
+                    }
+                     }
+
+
+            }catch (Exception e){
+                System.out.println("Estoy cayendo en la exception");
+            }
+
         }
-        return term1;
+        if(aOperador == null) return term1;
+        return null;
 
     }
 
@@ -346,6 +439,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
         for (int i = 1; i < ctx.factor().size(); i++) {
 
             factor2 = (String) this.visit(ctx.factor(i));
+
         }
         return factor1;
     }

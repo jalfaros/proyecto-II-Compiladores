@@ -88,7 +88,9 @@ arrayLookup      : ID PCIZQ expression                                          
 arrayLength      : ID PUNTO LENGTH 															            #arrLengthAST;
 
 literal          : INTLITERAL                                                                           #intLiteralAST
-                  | REALLITERAL                                                                         #realLiteralAST
-                  | BOOLITERAL                                                                          #boolLiteralAST
+                  //| REALLITERAL                                                                         #realLiteralAST
+                  | booleanLiteral                                                                      #boolLiteralAST
                   | STRINGLITERAL                                                                       #stringLiteralAST
                   | CHARLITERAL                                                                         #charListeralAST;
+
+booleanLiteral      : TRUE | FALSE                                                                      #booleanLiteralAST;
