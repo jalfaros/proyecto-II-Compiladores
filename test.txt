@@ -1,8 +1,6 @@
 
-int r = 5;
+int d = 6;
 
-boolean f = true;
+int[] f = new int[b];
 
-char p = 'r';
-
-int t = false || f;
+f[d] = 8;

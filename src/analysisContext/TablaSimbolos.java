@@ -7,7 +7,7 @@ import java.util.LinkedList;
 public class TablaSimbolos {
     LinkedList<Object> tabla;
 
-    private  int nivelActual;
+    public int nivelActual;
 
 
     public TablaSimbolos(){
