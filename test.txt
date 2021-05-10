@@ -1,6 +1,5 @@
 
-int d = 6;
 
-int[] f = new int[b];
 
-f[d] = 8;
+
+int[] p;
