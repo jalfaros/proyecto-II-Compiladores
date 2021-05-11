@@ -258,11 +258,6 @@ public class PrettyPrintAST<Object> extends miParserBaseVisitor<Object> {
         return null;
     }
 
-    @Override
-    public Object visitSubExpressionFactAST(miParser.SubExpressionFactASTContext ctx) {
-        this.visit(ctx.subExpression());
-        return null;
-    }
 
     @Override
     public Object visitArrayAlloExpreFactAST(miParser.ArrayAlloExpreFactASTContext ctx) {

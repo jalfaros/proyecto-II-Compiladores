@@ -83,7 +83,7 @@ funtionCall      : ID PIZQ (actualParams)? PDER 														#functionCallAST;
 
 actualParams     : expression (COMA expression)* 														#actualParamsAST;
 
-arrayLookup      : ID PCIZQ expression                                                                  #arrLookupAST;
+arrayLookup      : ID PCIZQ expression PCDER                                                            #arrLookupAST;
 
 arrayLength      : ID PUNTO LENGTH 															            #arrLengthAST;
 

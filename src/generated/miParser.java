@@ -2232,6 +2232,7 @@ public class miParser extends Parser {
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
+		public TerminalNode PCDER() { return getToken(miParser.PCDER, 0); }
 		public ArrLookupASTContext(ArrayLookupContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -2253,6 +2254,8 @@ public class miParser extends Parser {
 			match(PCIZQ);
 			setState(273);
 			expression();
+			setState(274);
+			match(PCDER);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2296,11 +2299,11 @@ public class miParser extends Parser {
 			_localctx = new ArrLengthASTContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(275);
-			match(ID);
 			setState(276);
-			match(PUNTO);
+			match(ID);
 			setState(277);
+			match(PUNTO);
+			setState(278);
 			match(LENGTH);
 			}
 		}
@@ -2369,14 +2372,14 @@ public class miParser extends Parser {
 		LiteralContext _localctx = new LiteralContext(_ctx, getState());
 		enterRule(_localctx, 60, RULE_literal);
 		try {
-			setState(283);
+			setState(284);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case INTLITERAL:
 				_localctx = new IntLiteralASTContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(279);
+				setState(280);
 				match(INTLITERAL);
 				}
 				break;
@@ -2385,7 +2388,7 @@ public class miParser extends Parser {
 				_localctx = new BoolLiteralASTContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(280);
+				setState(281);
 				booleanLiteral();
 				}
 				break;
@@ -2393,7 +2396,7 @@ public class miParser extends Parser {
 				_localctx = new StringLiteralASTContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(281);
+				setState(282);
 				match(STRINGLITERAL);
 				}
 				break;
@@ -2401,7 +2404,7 @@ public class miParser extends Parser {
 				_localctx = new CharListeralASTContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(282);
+				setState(283);
 				match(CHARLITERAL);
 				}
 				break;
@@ -2441,7 +2444,7 @@ public class miParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(285);
+			setState(286);
 			_la = _input.LA(1);
 			if ( !(_la==TRUE || _la==FALSE) ) {
 			_errHandler.recoverInline(this);
@@ -2465,7 +2468,7 @@ public class miParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3&\u0122\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3&\u0123\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -2485,16 +2488,16 @@ public class miParser extends Parser {
 		"\3\27\3\27\3\27\3\27\5\27\u00eb\n\27\3\30\3\30\7\30\u00ef\n\30\f\30\16"+
 		"\30\u00f2\13\30\3\31\3\31\3\31\3\31\3\31\3\32\3\32\3\32\3\32\3\32\3\32"+
 		"\3\33\3\33\3\33\3\33\3\34\3\34\3\34\5\34\u0106\n\34\3\34\3\34\3\35\3\35"+
-		"\3\35\7\35\u010d\n\35\f\35\16\35\u0110\13\35\3\36\3\36\3\36\3\36\3\37"+
-		"\3\37\3\37\3\37\3 \3 \3 \3 \5 \u011e\n \3!\3!\3!\2\2\"\2\4\6\b\n\f\16"+
-		"\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@\2\4\3\2\21\24\3\2!"+
-		"\"\2\u0127\2E\3\2\2\2\4^\3\2\2\2\6`\3\2\2\2\bi\3\2\2\2\nr\3\2\2\2\fz\3"+
-		"\2\2\2\16}\3\2\2\2\20\u0083\3\2\2\2\22\u008c\3\2\2\2\24\u008f\3\2\2\2"+
-		"\26\u0092\3\2\2\2\30\u009d\3\2\2\2\32\u00a5\3\2\2\2\34\u00ae\3\2\2\2\36"+
-		"\u00b0\3\2\2\2 \u00b2\3\2\2\2\"\u00b6\3\2\2\2$\u00be\3\2\2\2&\u00c5\3"+
-		"\2\2\2(\u00cd\3\2\2\2*\u00d5\3\2\2\2,\u00ea\3\2\2\2.\u00ec\3\2\2\2\60"+
+		"\3\35\7\35\u010d\n\35\f\35\16\35\u0110\13\35\3\36\3\36\3\36\3\36\3\36"+
+		"\3\37\3\37\3\37\3\37\3 \3 \3 \3 \5 \u011f\n \3!\3!\3!\2\2\"\2\4\6\b\n"+
+		"\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@\2\4\3\2\21\24"+
+		"\3\2!\"\2\u0128\2E\3\2\2\2\4^\3\2\2\2\6`\3\2\2\2\bi\3\2\2\2\nr\3\2\2\2"+
+		"\fz\3\2\2\2\16}\3\2\2\2\20\u0083\3\2\2\2\22\u008c\3\2\2\2\24\u008f\3\2"+
+		"\2\2\26\u0092\3\2\2\2\30\u009d\3\2\2\2\32\u00a5\3\2\2\2\34\u00ae\3\2\2"+
+		"\2\36\u00b0\3\2\2\2 \u00b2\3\2\2\2\"\u00b6\3\2\2\2$\u00be\3\2\2\2&\u00c5"+
+		"\3\2\2\2(\u00cd\3\2\2\2*\u00d5\3\2\2\2,\u00ea\3\2\2\2.\u00ec\3\2\2\2\60"+
 		"\u00f3\3\2\2\2\62\u00f8\3\2\2\2\64\u00fe\3\2\2\2\66\u0102\3\2\2\28\u0109"+
-		"\3\2\2\2:\u0111\3\2\2\2<\u0115\3\2\2\2>\u011d\3\2\2\2@\u011f\3\2\2\2B"+
+		"\3\2\2\2:\u0111\3\2\2\2<\u0116\3\2\2\2>\u011e\3\2\2\2@\u0120\3\2\2\2B"+
 		"D\5\4\3\2CB\3\2\2\2DG\3\2\2\2EC\3\2\2\2EF\3\2\2\2F\3\3\2\2\2GE\3\2\2\2"+
 		"HI\5\32\16\2IJ\7\3\2\2J_\3\2\2\2KL\5\26\f\2LM\7\3\2\2M_\3\2\2\2NO\5\""+
 		"\22\2OP\7\3\2\2P_\3\2\2\2QR\5$\23\2RS\7\3\2\2S_\3\2\2\2TU\5\24\13\2UV"+
@@ -2553,12 +2556,13 @@ public class miParser extends Parser {
 		"\2\u0109\u010e\5&\24\2\u010a\u010b\7\t\2\2\u010b\u010d\5&\24\2\u010c\u010a"+
 		"\3\2\2\2\u010d\u0110\3\2\2\2\u010e\u010c\3\2\2\2\u010e\u010f\3\2\2\2\u010f"+
 		"9\3\2\2\2\u0110\u010e\3\2\2\2\u0111\u0112\7%\2\2\u0112\u0113\7\13\2\2"+
-		"\u0113\u0114\5&\24\2\u0114;\3\2\2\2\u0115\u0116\7%\2\2\u0116\u0117\7\r"+
-		"\2\2\u0117\u0118\7\37\2\2\u0118=\3\2\2\2\u0119\u011e\7 \2\2\u011a\u011e"+
-		"\5@!\2\u011b\u011e\7#\2\2\u011c\u011e\7$\2\2\u011d\u0119\3\2\2\2\u011d"+
-		"\u011a\3\2\2\2\u011d\u011b\3\2\2\2\u011d\u011c\3\2\2\2\u011e?\3\2\2\2"+
-		"\u011f\u0120\t\3\2\2\u0120A\3\2\2\2\26E^dmw\u008a\u0098\u00a1\u00a9\u00ae"+
-		"\u00b9\u00ca\u00d2\u00da\u00e1\u00ea\u00f0\u0105\u010e\u011d";
+		"\u0113\u0114\5&\24\2\u0114\u0115\7\f\2\2\u0115;\3\2\2\2\u0116\u0117\7"+
+		"%\2\2\u0117\u0118\7\r\2\2\u0118\u0119\7\37\2\2\u0119=\3\2\2\2\u011a\u011f"+
+		"\7 \2\2\u011b\u011f\5@!\2\u011c\u011f\7#\2\2\u011d\u011f\7$\2\2\u011e"+
+		"\u011a\3\2\2\2\u011e\u011b\3\2\2\2\u011e\u011c\3\2\2\2\u011e\u011d\3\2"+
+		"\2\2\u011f?\3\2\2\2\u0120\u0121\t\3\2\2\u0121A\3\2\2\2\26E^dmw\u008a\u0098"+
+		"\u00a1\u00a9\u00ae\u00b9\u00ca\u00d2\u00da\u00e1\u00ea\u00f0\u0105\u010e"+
+		"\u011e";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

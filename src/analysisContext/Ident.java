@@ -7,7 +7,9 @@ class Ident{
     String type;
     int nivel;
     int valor; //Este valor hay que cambiarlo
+    boolean initialited;
     ParserRuleContext declCtx;
+
 
 
     public Ident(Token t, String tp, ParserRuleContext decl, int nivelActual ) {
@@ -16,6 +18,7 @@ class Ident{
         nivel = nivelActual;
         valor = 0;
         declCtx = decl;
+        initialited = false;
     }
 
     public void setValue(int v){
