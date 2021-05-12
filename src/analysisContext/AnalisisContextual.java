@@ -262,16 +262,17 @@ public class AnalisisContextual extends miParserBaseVisitor {
             String exprType2 = (String) (ctx.type().getText());
             String exprArray = exprType + "[]";
             typeDecArr = typeDecArr +"[]";
+            Ident exist = null;
 
             if(!typeDecArr.equals(ctx.type().getText()) && typeDecArr.length() > 2){
-                System.out.println("La declaración del arreglo debe ser igual al tipo.");
+                System.out.println("La inicialización del arreglo debe ser igual al tipo.");
             } else if (exprType == null) {
                 Ident id = tabla.buscar(ctx.expression().getText());
                 if( id != null && id.nivel >= tabla.nivelActual){
                     if( !id.type.equals(exprType2)){
                         System.out.println("A la variable \"" + ctx.ID() +"\" solo se le puede asignar valores con el mismo tipo de datos.");
                     }else{
-                        Ident exist = tabla.buscar(ctx.ID().getText());
+                        exist = tabla.buscar(ctx.ID().getText());
                         if (exist == null){
                             Object attr = this.visit(ctx.type());
                             if(attr != null) {
@@ -286,23 +287,34 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     System.out.println("La asignación: \"" + ctx.expression().getText() + "\", no corresponde a un tipo de dato!");
                 }
             } else if (exprArray.equals(exprType2) ) {
-                Ident exist = tabla.buscar(ctx.ID().getText());
+                exist = tabla.buscar(ctx.ID().getText());
                 if (exist != null && exist.nivel == tabla.nivelActual){
                     System.out.println("Ya hay una variable existente con el nombre \"" + exist.tok.getText() + "\".");
                 }
                 else {
+                    //AQUI ESTA GUARDANDO CUANDO TRAE EL NEW
+                    System.out.println("Agregando la inicialización del array en visitVariableDecl");
                     tabla.insertar(ctx.ID().getSymbol(), (String) exprArray, ctx);
+                    exist = tabla.buscar(ctx.ID().getText());
+                    exist.initialited = true;
+
                 }
             } else if (!exprType2.equals(exprType) && !ctx.type().getText().substring(ctx.type().getText().length()-2, ctx.type().getText().length()).equals("[]")){
 
                 System.out.println("A la variable: "+ctx.ID()+" tipo: <" + ctx.type().getText() + "> no se le puede asignar el tipo <" + exprType + ">.");
 
             } else {
-                Ident exist = tabla.buscar(ctx.ID().getText());
+                exist = tabla.buscar(ctx.ID().getText());
                 if(typeDecArr.length() > 2 && exist == null) {
                     Object attr = this.visit(ctx.type());
+
                     if(attr != null) {
                         tabla.insertar(ctx.ID().getSymbol(), (String) typeDecArr, ctx);
+
+                        if(ctx.expression().getText().substring(0,3).equals("new")){
+                            exist = tabla.buscar(ctx.ID().getText());
+                            exist.initialited = true;
+                        }
                     }
                 }
                 else if (exist == null){
@@ -356,98 +368,68 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitAsssignAST(miParser.AsssignASTContext ctx) {
-
         Ident id = tabla.buscar(ctx.ID(0).getText());
 
-        if(id != null){
+        if (id != null) {
 
             Object exprType = this.visit(ctx.expression());
             Ident idExp2 = tabla.buscar(ctx.expression().getText());
 
-            if(id.type.substring(id.type.length()-2, id.type.length()).equals("[]") && idExp2 == null){
-                System.out.println("Error, no es la manera correcta para asignar a un array.");
+            if (ctx.ID(1) != null) {
+                System.out.println("Ya se esta usando el id y el punto en AsssingnAST revisemos");
 
-            } else if(exprType == null){
-                idExp2 = tabla.buscar(ctx.expression().getText());
-                if(idExp2 == null) {
-                    System.out.println(" <" + ctx.expression().getText() + ">, no corresponde a un tipo de dato o no ha sido declarado!");
-                }else if(!idExp2.type.equals(id.type)){
-                    System.out.println("La asignación: <" +ctx.expression().getText()+">, no corresponde al mismo tipo de dato!");
-                }
-            } else if (!id.type.equals(exprType)){
-                System.out.println("Los tipos son imcompatibles para la asignación entre: <"+ id.type +"> y <"+exprType+">.");
+                System.out.println(ctx.ID(1) + " Este es el segundo id");
             }
 
-            }else if(id == null) {
-                System.out.println("\""+ctx.ID(0).getText() + "\" no ha sido declarado!!!");
-            }
+            if (idExp2 != null) {
+                if (idExp2.type.substring(idExp2.type.length() - 2, idExp2.type.length()).equals("[]"))
+                    if (!idExp2.initialited)
+                        System.out.println("Error, el array \"" + ctx.expression().getText() + "\" no ha sido inicializado.");
+                    else if (!id.initialited)
+                        System.out.println("Error, el array \"" + ctx.ID(0).getText() + "\" no ha sido inicializado.");
 
-        return this.visit(ctx.expression());
-    }
+                    else if (!id.type.equals(idExp2.type))
+                        System.out.println("Error, el array \"" + ctx.expression().getText() + "\" no es del mismo tipo.");
 
-    @Override
-    public Object visitArrAssignAST(miParser.ArrAssignASTContext ctx) {
-        String simpleExpre1 = (String) this.visit(ctx.expression(0));
-        String simpleExpre2 = (String) this.visit(ctx.expression(1));
+                    //else System.out.println("Error, se esta asignando un dato invalido.");
+            } else if (id.type.substring(id.type.length() - 2, id.type.length()).equals("[]")) {
 
-        Ident id = null;
-        id = tabla.buscar(ctx.ID().getText());
-
-        if(id != null){
-            String type = id.type.substring(0, id.type.length()-2);
-
-
-            //Preguntar esto de los niveles porque tengo dudas
-            if( id.nivel > tabla.nivelActual){
-                System.out.println(ctx.ID() + "No ha sido asignado en este nivel!");
-
-
-            }else if(simpleExpre1 == null){
-                id = tabla.buscar(ctx.expression(0).getText());
-                if(id != null) {
-                    Ident arrType = tabla.buscar(ctx.ID().getText());
-
-                    //Lo que tenia era !type.equals(id.type)
-                    if (!id.type.equals("int")) {
-                        System.out.println("El index ingresado no es un dato valido, debe ser tipo int.");
-                    }else  if (simpleExpre2== null){
-                        Ident idRigth = tabla.buscar(ctx.expression(1).getText());
-                        if(idRigth != null) {
-                            if (!arrType.type.equals((idRigth.type +"[]"))) {
-                                System.out.println("El array es de tipo \""+arrType.type+", debe asignar datos del mismo tipo al array.");
-                            }
-                        }else {
-                            System.out.println("El dato asignado no es un dato valido o no ha sido declarado.");
+                try {
+                    String test = (ctx.expression().getText().substring(0, 3));
+                    if (test.equals("new")) {
+                        String test2 = (ctx.expression().getText().substring(3, 1 + id.type.length()));
+                        if (!id.type.equals((test2 + "[]"))) {
+                            System.out.println("Error, el array es tipo \"" + id.type + "\" y está tratando de inicializar con un tipo de dato diferente");
+                        } else if (exprType.equals("int")) {
+                            System.out.println("Agregando la inicializacion, en el asssingAST a: " + ctx.ID(0).getText());
+                            id.initialited = true;
                         }
-
-                    } else if (!arrType.type.equals(this.visit(ctx.expression(1))+"[]")){
-                        System.out.println("El array es de tipo \""+arrType.type+", debe asignar datos del mismo tipo al array.");
+                    } else if (!id.initialited)
+                        System.out.println("El arreglo \" " + ctx.ID(0).getText() + " \" aún no ha sido inicializado.");
+                    else if(!exprType.equals((id.type.substring(0,id.type.length()-2)))){
+                        System.out.println("Error, al arreglo no se le permite asignar de esta manera.");
                     }
-                }else {
-                    System.out.println("El index ingresado no es un dato valido o no ha sido declarado.");
+                } catch (Exception e) {
+                    System.out.println("Error, no es la manera correcta para asignar a un array.");
                 }
-            } else if(!simpleExpre1.equals("int")){
-                System.out.println("Para acceder a la posición del arreglo debe ingresar un dato tipo int en el index.");
 
-            }else if(simpleExpre2 == null){
-                id = tabla.buscar(ctx.expression(1).getText());
-                if(id != null) {
-                    if (!type.equals(id.type)) {
-                        System.out.println("El dato asignado no es un dato valido, debe ser tipo " +type);
-                    }
-                }else {
-                    System.out.println("El dato asignado no es un dato valido o no ha sido declarado.");
+
+            } else if (exprType == null) {
+                idExp2 = tabla.buscar(ctx.expression().getText());
+                if (idExp2 == null) {
+                    System.out.println(" <" + ctx.expression().getText() + ">, no corresponde a un tipo de dato o no ha sido declarado!");
+                } else if (!idExp2.type.equals(id.type)) {
+                    System.out.println("La asignación: <" + ctx.expression().getText() + ">, no corresponde al mismo tipo de dato!");
                 }
-            } else if(!type.equals(simpleExpre2)){
-                System.out.println("El array es de tipo \""+id.type+", debe asignar datos del mismo tipo al array.");
+            } else if (!id.type.equals(exprType)) {
+                System.out.println("Los tipos son imcompatibles para la asignación entre: <" + id.type + "> y <" + exprType + ">.");
             }
-        }else {
-            System.out.println("El array "+ctx.ID() + " aún no ha sido declarado!");
+
+        } else if (id == null) {
+            System.out.println("\"" + ctx.ID(0).getText() + "\" no ha sido declarado!!!");
         }
 
-
-
-        return this.visit(ctx.expression(0));
+        return null;
     }
 
     @Override
@@ -837,11 +819,10 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitArrAllocationExprAST(miParser.ArrAllocationExprASTContext ctx) {
-
         Object attr = this.visit(ctx.expression());
         Ident id = null;
         if(attr != null){
-            if ( attr != "int"){
+            if (!((String) attr).equals("int")){
                 System.out.println("La inicialización de los arreglos deben de ser siempre de tipo int y se esta usando  tipo \""+attr+"\"");
             }
         }else{
