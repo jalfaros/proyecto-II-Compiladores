@@ -1,10 +1,14 @@
 
 
-string[] p;
+class inst {
+    int perrito1 = 25;
+};
 
-int f = 25 + 25;
+int probando;
 
-p = new string[5];
+inst probando;
 
-p = p;
+
+
+
 

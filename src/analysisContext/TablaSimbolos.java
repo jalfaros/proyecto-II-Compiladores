@@ -17,7 +17,7 @@ public class TablaSimbolos {
 
     public void insertar(Token id, String tipo, ParserRuleContext decl){
         //no se puede insertar un elemento repetido en el mismo nivel
-        Ident i = new Ident(id,tipo,decl, nivelActual);
+        Ident i = new Ident(id,tipo,decl, nivelActual, "");
         tabla.addFirst(i);
     }
 
@@ -40,7 +40,7 @@ public class TablaSimbolos {
     }
 
     public void imprimir() {
-        System.out.println("----- INICIO TABLA ------");
+        System.out.println("\n----- INICIO TABLA ------");
         for (Object o : tabla) {
             Token s = (Token) ((Ident) o).tok;
             System.out.println("Nombre: " + s.getText() + " - " + ((Ident) o).nivel + " - " + ((Ident) o).type);
@@ -48,6 +48,6 @@ public class TablaSimbolos {
             else if (s.getType() == 1) System.out.println("\tTipo: Integer\n");
             else if (s.getType() == 2) System.out.println("\tTipo: String\n");*/
         }
-        System.out.println("----- FIN TABLA ------");
+        System.out.println("----- FIN TABLA ------\n");
     }
 }

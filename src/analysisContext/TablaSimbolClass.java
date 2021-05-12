@@ -1,0 +1,62 @@
+package analysisContext;
+
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+
+import java.util.LinkedList;
+
+public class TablaSimbolClass {
+    LinkedList<Object> tabla;
+
+    public int nivelActualClase;
+
+    public TablaSimbolClass() {
+        tabla = new LinkedList<Object>();
+        this.nivelActualClase = -1;
+    }
+
+    public void insertar(Token id, String tipo, ParserRuleContext decl,String className){
+        //no se puede insertar un elemento repetido en el mismo nivel
+        Ident i = new Ident(id,tipo,decl, nivelActualClase, className);
+        tabla.addFirst(i);
+    }
+
+    public Ident buscar(String nombre)
+    {
+        Ident temp=null;
+        for(Object id : tabla)
+            if (((Ident)id).tok.getText().equals(nombre))
+                return ((Ident)id);
+        return temp;
+    }
+
+    public Ident buscarClase(String nombre)
+    {
+        Ident temp=null;
+        for(Object nomb : tabla)
+            if (((Ident)nomb).className.equals(nombre))
+                return ((Ident)nomb);
+        return temp;
+    }
+
+    public void openScope(){
+        nivelActualClase++;
+    }
+
+    public void closeScope(){
+        tabla.removeIf(n -> (((Ident)n).nivel == nivelActualClase));
+        nivelActualClase--;
+    }
+
+    public void imprimir() {
+        System.out.println("\n----- INICIO TABLA ------ ");
+        for (Object o : tabla) {
+            Token s = (Token) ((Ident) o).tok;
+            System.out.println("Nombre: " + s.getText() + " - " + ((Ident) o).nivel + " - " + ((Ident) o).type + " - clase: "+((Ident) o).className);
+/*            if (s.getType() == 0) System.out.println("\tTipo: Indefinido");
+            else if (s.getType() == 1) System.out.println("\tTipo: Integer\n");
+            else if (s.getType() == 2) System.out.println("\tTipo: String\n");*/
+        }
+        System.out.println("----- FIN TABLA ------ \n");
+    }
+}

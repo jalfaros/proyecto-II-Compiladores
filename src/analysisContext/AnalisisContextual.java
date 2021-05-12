@@ -9,9 +9,12 @@ import java.util.Objects;
 public class AnalisisContextual extends miParserBaseVisitor {
     private TablaSimbolos tabla;
 
+    private TablaSimbolClass tablaClass;
+
    public AnalisisContextual() {
 
        tabla = new TablaSimbolos();
+       tablaClass = new TablaSimbolClass();
    }
 
     @Override
@@ -231,15 +234,34 @@ public class AnalisisContextual extends miParserBaseVisitor {
         return this.visit(ctx.expression());
     }
 
+
+    miParser.ClassVariableDeclASTContext ctxVar = null;
     @Override
     public Object visitClassDelcAST(miParser.ClassDelcASTContext ctx) {
-        for(miParser.ClassVariableDeclarationContext c : ctx.classVariableDeclaration())
-            this.visit(c);
+        Ident id;
+
+        for (int i = 0; i < ctx.classVariableDeclaration().size(); i++) {
+            this.visit(ctx.classVariableDeclaration(i));
+            id = tablaClass.buscar(ctxVar.ID().getText());
+            if(id != null){
+                if (!id.className.equals(ctx.ID().getText())){
+                    tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
+                }else{
+                    System.out.println("Error, ya existe en la clase <"+ctx.ID().getText() +"> una variable con el nombre <"+ ctxVar.ID().getText() + ">.");
+                }
+            }else {
+                tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
+            }
+
+        }
+        tablaClass.imprimir();
         return null;
     }
 
     @Override
     public Object visitClassVariableDeclAST(miParser.ClassVariableDeclASTContext ctx) {
+
+        ctxVar = ctx;
 
         this.visit(ctx.stype());
         this.visit(ctx.expression());
@@ -248,6 +270,20 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitVariableDeclAST(miParser.VariableDeclASTContext ctx) {
+
+        Ident claseExist = tablaClass.buscarClase(ctx.type().getText());
+        if(claseExist != null) {
+
+            Ident id = tabla.buscar(ctx.ID().getText());
+            if (id != null)
+                System.out.println("Error, <"+ctx.ID().getText()+"> ya existe y no puede ser duplicado.");
+            else {
+
+                 tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+            }
+            tabla.imprimir();
+            return null;
+        }else if(ctx.ASSIGN() == null) System.out.println("Error, el tipo de dato <"+ctx.type().getText()+"> no existe.");
 
         try {
             String typeDecArr = switch (ctx.type().getText()) {
@@ -281,6 +317,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                         }
                         else {
                             System.out.println("Ya hay una variable existente con el nombre \"" + exist.tok.getText() + "\".");
+                            return null;
                         }}
                 }
                 else {
@@ -290,6 +327,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                 exist = tabla.buscar(ctx.ID().getText());
                 if (exist != null && exist.nivel == tabla.nivelActual){
                     System.out.println("Ya hay una variable existente con el nombre \"" + exist.tok.getText() + "\".");
+                    return null;
                 }
                 else {
                     //AQUI ESTA GUARDANDO CUANDO TRAE EL NEW
@@ -368,6 +406,29 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitAsssignAST(miParser.AsssignASTContext ctx) {
+
+
+        if(ctx.PUNTO() != null && ctx.ID(1) != null){
+            System.out.println(ctx.ID(0).getText() + "herre");
+
+            Ident id1 = tablaClass.buscarClase(ctx.ID(0).getText());
+            Ident id2 = tablaClass.buscar(ctx.ID(1).getText());
+
+            if(id1 != null){
+                if(id2 != null) {
+                    if (!id2.className.equals(id1.className)){
+                        System.out.println("Error, <"+ctx.ID(1).getText()+"> no es compatible para el tipo <"+ctx.ID(0)+">.");
+                    }
+
+                }else System.out.println("Error, <"+ctx.ID(1)+"> no existe en <"+ctx.ID(0)+">.");
+            }else System.out.println("Error, <"+ctx.ID(0).getText()+"> no corresponde a ningún tipo de dato.");
+
+
+
+            return null;
+        }
+
+
         Ident id = tabla.buscar(ctx.ID(0).getText());
 
         if (id != null) {
@@ -375,11 +436,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
             Object exprType = this.visit(ctx.expression());
             Ident idExp2 = tabla.buscar(ctx.expression().getText());
 
-            if (ctx.ID(1) != null) {
-                System.out.println("Ya se esta usando el id y el punto en AsssingnAST revisemos");
-
-                System.out.println(ctx.ID(1) + " Este es el segundo id");
-            }
 
             if (idExp2 != null) {
                 if (idExp2.type.substring(idExp2.type.length() - 2, idExp2.type.length()).equals("[]"))
@@ -788,6 +844,8 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitAllocaExpreFactAST(miParser.AllocaExpreFactASTContext ctx) {
+        System.out.println(ctx.allocationExpression().getText() + "allocation");
+        System.out.println(this.visit(ctx.allocationExpression()) + " allocation exprecion");
         return this.visit(ctx.allocationExpression());
     }
 
@@ -813,8 +871,9 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitAllocationExprAST(miParser.AllocationExprASTContext ctx) {
-        //
-        return null;
+        System.out.println(ctx.ID().getText() + " desde el pegue \n");
+        System.out.println(ctx.getText());
+        return ctx.ID().getText();
     }
 
     @Override
