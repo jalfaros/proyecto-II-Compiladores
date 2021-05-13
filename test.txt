@@ -2,16 +2,21 @@
 class test{
     int j = 5;
     int p = j;
-    string h = "sadf";
-
-    char r = j;
+    string h = "lhlh";
 
 };
 
-test n = new test();
-char p = 'e';
+class hola{
+    int h = 5;
+    int b = h;
 
-char d = p;
+};
+
+test n;
+new test();
+
+
+char r = 'afd';
 
 
 
