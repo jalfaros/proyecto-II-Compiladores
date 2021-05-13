@@ -4,12 +4,15 @@ import generated.miParser;
 import generated.miParserBaseVisitor;
 import org.antlr.v4.runtime.Token;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class AnalisisContextual extends miParserBaseVisitor {
     private TablaSimbolos tabla;
 
     private TablaSimbolClass tablaClass;
+    List<String> classes = new ArrayList<String>();
 
    public AnalisisContextual() {
 
@@ -238,21 +241,70 @@ public class AnalisisContextual extends miParserBaseVisitor {
     miParser.ClassVariableDeclASTContext ctxVar = null;
     @Override
     public Object visitClassDelcAST(miParser.ClassDelcASTContext ctx) {
+        Ident existClass = tablaClass.buscarClase(ctx.ID().getText());
+        if(existClass == null){
+            classes.add(ctx.ID().getText());
+        }
         Ident id;
 
         for (int i = 0; i < ctx.classVariableDeclaration().size(); i++) {
             this.visit(ctx.classVariableDeclaration(i));
-            id = tablaClass.buscar(ctxVar.ID().getText());
-            if(id != null){
-                if (!id.className.equals(ctx.ID().getText())){
-                    tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
-                }else{
-                    System.out.println("Error, ya existe en la clase <"+ctx.ID().getText() +"> una variable con el nombre <"+ ctxVar.ID().getText() + ">.");
-                }
-            }else {
-                tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
-            }
 
+            if (ctxVar.ASSIGN() != null){
+                id = tablaClass.buscar(ctxVar.ID().getText());
+                if(id != null){
+                    if (!id.className.equals(ctx.ID().getText())){
+
+                        id = tablaClass.buscarClaseYVar(ctx.ID().getText(),ctxVar.expression().getText());
+                        if( this.visit(ctxVar.expression()) != null){
+                            if (this.visit(ctxVar.expression()).equals(ctxVar.stype().getText())){
+                                tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
+                                id = tablaClass.buscar(ctxVar.ID().getText());
+                                id.initialited = true;
+                            }else System.out.println("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.");
+                        }else if (id != null){
+                            if (id.type.equals(ctxVar.stype().getText())){
+                                tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
+                                id = tablaClass.buscar(ctxVar.ID().getText());
+                                id.initialited = true;
+                            }else System.out.println("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.");
+
+                        } else System.out.println("Error, el dato que le quiere asignar a <"+ctxVar.ID()+"> en la clase <"+ctx.ID().getText() +">, no es un tipo de dato valido.");
+
+                    }else{
+                        System.out.println("Error, ya existe en la clase <"+ctx.ID().getText() +"> una variable con el nombre <"+ ctxVar.ID().getText() + ">.");
+                    }
+                }else {
+                    id = tablaClass.buscarClaseYVar(ctx.ID().getText(),ctxVar.expression().getText());
+                    if( this.visit(ctxVar.expression()) != null){
+                        if (this.visit(ctxVar.expression()).equals(ctxVar.stype().getText())){
+                            tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
+                            id = tablaClass.buscar(ctxVar.ID().getText());
+                            id.initialited = true;
+                        }else System.out.println("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.");
+                    }else if (id != null){
+                        if (id.type.equals(ctxVar.stype().getText())){
+                            tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
+                            id = tablaClass.buscar(ctxVar.ID().getText());
+                            id.initialited = true;
+                        }else System.out.println("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.");
+
+                    } else System.out.println("Error, el dato que le quiere asignar a <"+ctxVar.ID()+"> en la clase <"+ctx.ID().getText() +">, no es un tipo de dato valido.");
+
+                }
+
+            }else {
+                id = tablaClass.buscar(ctxVar.ID().getText());
+                if(id != null){
+                    if (!id.className.equals(ctx.ID().getText())){
+                        tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
+                    }else{
+                        System.out.println("Error, ya existe en la clase <"+ctx.ID().getText() +"> una variable con el nombre <"+ ctxVar.ID().getText() + ">.");
+                    }
+                }else {
+                    tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
+                }
+            }
         }
         tablaClass.imprimir();
         return null;
@@ -270,114 +322,128 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitVariableDeclAST(miParser.VariableDeclASTContext ctx) {
+        //System.out.println(ctx.getText());
+        //ME FALTA VALIDAR EL NEW TEST
+        Ident idExist = tabla.buscar(ctx.ID().getText());
+        boolean classExist = false;
 
-        Ident claseExist = tablaClass.buscarClase(ctx.type().getText());
-        if(claseExist != null) {
+        //Validando si es un tipo de clase
+        for (String c: classes) {
+            if (c.equals(ctx.type().getText()))
+                classExist = true;
+        }
 
-            Ident id = tabla.buscar(ctx.ID().getText());
-            if (id != null)
-                System.out.println("Error, <"+ctx.ID().getText()+"> ya existe y no puede ser duplicado.");
-            else {
+        //VALIDANDO SOLO LA DECLARACION
+        if (ctx.ASSIGN() == null && idExist == null){
+            if(ctx.type().getText().equals("boolean[]") || ctx.type().getText().equals("char[]") || ctx.type().getText().equals("int[]") || ctx.type().getText().equals("string[]")){
+                tabla.insertar(ctx.ID().getSymbol(),ctx.type().getText(),ctx);
 
-                 tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
-            }
-            tabla.imprimir();
-            return null;
-        }else if(ctx.ASSIGN() == null) System.out.println("Error, el tipo de dato <"+ctx.type().getText()+"> no existe.");
+            }else if (ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string")){
+                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
 
-        try {
-            String typeDecArr = switch (ctx.type().getText()) {
-                case "int[]" -> ctx.expression().getText().substring(3, 6);
-                case "char[]" -> ctx.expression().getText().substring(3, 7);
-                case "string[]" -> ctx.expression().getText().substring(3, 9);
-                case "boolean[]" -> ctx.expression().getText().substring(3, 10);
-                default -> "";
-            };
+            }else if(classExist){
+                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
 
-            Object exprType = (String) this.visit(ctx.expression());
-            String exprType2 = (String) (ctx.type().getText());
-            String exprArray = exprType + "[]";
-            typeDecArr = typeDecArr +"[]";
-            Ident exist = null;
+            }else System.out.println("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.");
 
-            if(!typeDecArr.equals(ctx.type().getText()) && typeDecArr.length() > 2){
-                System.out.println("La inicialización del arreglo debe ser igual al tipo.");
-            } else if (exprType == null) {
-                Ident id = tabla.buscar(ctx.expression().getText());
-                if( id != null && id.nivel >= tabla.nivelActual){
-                    if( !id.type.equals(exprType2)){
-                        System.out.println("A la variable \"" + ctx.ID() +"\" solo se le puede asignar valores con el mismo tipo de datos.");
-                    }else{
-                        exist = tabla.buscar(ctx.ID().getText());
-                        if (exist == null){
-                            Object attr = this.visit(ctx.type());
-                            if(attr != null) {
-                                tabla.insertar(ctx.ID().getSymbol(), (String) attr, ctx);
+        //VALIDANDO DECLARACION Y ASIGNACION
+        }else if(ctx.ASSIGN() != null && idExist == null){
+            //VALIDANDO ARRAYS
+            if(ctx.type().getText().equals("boolean[]") || ctx.type().getText().equals("char[]") || ctx.type().getText().equals("int[]") || ctx.type().getText().equals("string[]")){
+                if (this.visit(ctx.expression()) != null){
+                    try {
+                        if (ctx.expression().getText().substring(0, 3).equals("new")) {
+                            if (ctx.type().getText().equals((ctx.expression().getText().substring(3, ctx.type().getText().length() +1 )) + "[]" )) {
+                                if(this.visit(ctx.expression()).equals("int")) {
+                                    tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                                    idExist = tabla.buscar(ctx.ID().getText());
+                                    idExist.initialited = true;
+                                } else System.out.println();
+                            }else {
+                                System.out.println("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de inicializarlo con otro tipo.");
                             }
-                        }
-                        else {
-                            System.out.println("Ya hay una variable existente con el nombre \"" + exist.tok.getText() + "\".");
-                            return null;
-                        }}
-                }
-                else {
-                    System.out.println("La asignación: \"" + ctx.expression().getText() + "\", no corresponde a un tipo de dato!");
-                }
-            } else if (exprArray.equals(exprType2) ) {
-                exist = tabla.buscar(ctx.ID().getText());
-                if (exist != null && exist.nivel == tabla.nivelActual){
-                    System.out.println("Ya hay una variable existente con el nombre \"" + exist.tok.getText() + "\".");
-                    return null;
-                }
-                else {
-                    //AQUI ESTA GUARDANDO CUANDO TRAE EL NEW
-                    System.out.println("Agregando la inicialización del array en visitVariableDecl");
-                    tabla.insertar(ctx.ID().getSymbol(), (String) exprArray, ctx);
-                    exist = tabla.buscar(ctx.ID().getText());
-                    exist.initialited = true;
 
-                }
-            } else if (!exprType2.equals(exprType) && !ctx.type().getText().substring(ctx.type().getText().length()-2, ctx.type().getText().length()).equals("[]")){
+                        }else if(ctx.type().getText().equals(this.visit(ctx.expression()))){
+                            idExist = tabla.buscar(ctx.expression().getText());
+                            if(idExist.initialited){
+                                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                                idExist = tabla.buscar(ctx.ID().getText());
+                                idExist.initialited = true;
+                            }else System.out.println("Error, el arreglo <"+ctx.expression().getText()+"> aún no ha sido inicializado.");
 
-                System.out.println("A la variable: "+ctx.ID()+" tipo: <" + ctx.type().getText() + "> no se le puede asignar el tipo <" + exprType + ">.");
+                        }else System.out.println("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de asignar otro tipo.");
 
-            } else {
-                exist = tabla.buscar(ctx.ID().getText());
-                if(typeDecArr.length() > 2 && exist == null) {
-                    Object attr = this.visit(ctx.type());
+                    } catch (Exception e) {
+                        if(ctx.type().getText().equals(this.visit(ctx.expression()))){
+                            idExist = tabla.buscar(ctx.expression().getText());
+                            if(idExist.initialited){
+                                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                                idExist = tabla.buscar(ctx.ID().getText());
+                                idExist.initialited = true;
+                            }else System.out.println("Error, el arreglo <"+ctx.expression().getText()+"> aún no ha sido inicializado.");
 
-                    if(attr != null) {
-                        tabla.insertar(ctx.ID().getSymbol(), (String) typeDecArr, ctx);
-
-                        if(ctx.expression().getText().substring(0,3).equals("new")){
-                            exist = tabla.buscar(ctx.ID().getText());
-                            exist.initialited = true;
-                        }
+                        }else System.out.println("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de inicializarlo con otro tipo.");
                     }
-                }
-                else if (exist == null){
-                    Object attr = this.visit(ctx.type());
-                    if(attr != null) {
-                        tabla.insertar(ctx.ID().getSymbol(), (String) ctx.type().getText(), ctx);
+                }else System.out.println("Error, el dato que trata de asignar a <"+ctx.ID().getText()+"> aún no ha sido declarado.");
+
+            //VALIDANDO VARIABLES
+            }else if ((ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string"))){
+                //System.out.println(this.visit(ctx.expression()) + " "+ ctx.expression().getText());
+                if (ctx.type().getText().equals(this.visit(ctx.expression()))){
+                    tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                    idExist = tabla.buscar(ctx.ID().getText());
+                    idExist.initialited = true;
+                //------------------------------------------------------------------------------------
+                }else if (ctx.expression().getText().contains(".")){
+                    String[] parts = ctx.expression().getText().split("\\.");
+                    String part1 = parts[0]; // 123
+                    String part2 = parts[1]; // 654321
+
+                    idExist = tabla.buscar(part1);
+                    if(idExist != null) {//Busco en la tabla local si existe
+                        if (idExist.initialited){ //Viendo si la vara fue inicializada
+                            String clase = idExist.type;
+                            idExist = tablaClass.buscarClaseYVar(clase,part2); // busco la clase en la tabla de clases
+                            if (idExist != null) {
+                                if (clase.equals(idExist.className)) {//valida que la variable sea de esa clase al existir.
+                                    //Valido que exista esa varible
+                                    if (idExist.type.equals(ctx.type().getText())) { //Valido que lo que se va a asignar sean iguales
+                                        if (idExist.initialited) {//Valido que este inicializada
+                                            tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                                            idExist = tabla.buscar(ctx.ID().getText());
+                                            idExist.initialited = true;
+                                        } else
+                                            System.out.println("Error, <" + part1 + "> no a sido inicializada.");
+                                    } else
+                                        System.out.println("Error, la variable es tipo <" + ctx.type().getText() + "> y está tratando de inicializarlo con otro tipo.");
+                                } else System.out.println("Error, el dato que quiere asignar no existe.");
+                            }else System.out.println("Error, no se encuentra <"+part2+"> en < "+part1+" >.");
+                        }else System.out.println("Error, <"+part1+"> no a sido inicializada.");
+                    }else System.out.println("Error, está asignando a <"+ctx.ID().getText()+"> un dato invalido.");
+
+                }else System.out.println("Error, el dato que se quiere asignar a <"+ctx.ID().getText()+"> no es un dato valido.");
+                //----------------------------------------------------------------------------------------
+
+            }else if(classExist){
+                if (ctx.expression().getText().substring(0, 3).equals("new")) {
+                    if (ctx.type().getText().equals((ctx.expression().getText().substring(3, ctx.expression().getText().length() -2 ))  )) {
+                        tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                        idExist = tabla.buscar(ctx.ID().getText());
+                        idExist.initialited = true;
+                    }else {
+                        System.out.println("Error, la variable es tipo <"+ctx.type().getText()+"> y está tratando de usar un dato invalido sin inicializar.");
                     }
-                }
-                else {
-                    System.out.println("Ya hay una variable existente con el nombre \"" + exist.tok.getText() + "\".");
-                }
-            }
-        }catch (Exception e){
-            Ident exist = tabla.buscar(ctx.ID().getText());
-            if (exist != null && exist.nivel == tabla.nivelActual){
-                System.out.println("Ya hay una variable existente con el nombre \"" + exist.tok.getText() + "\".");
-            }
-            else {
-                Object attr = this.visit(ctx.type());
-                if(ctx.type().getText().equals((attr+"[]")))
-                    tabla.insertar(ctx.ID().getSymbol(), (String) attr+"[]", ctx);
-                else if(attr != null) {
-                    tabla.insertar(ctx.ID().getSymbol(), (String) attr, ctx);
-                }
-            }
+
+                }else System.out.println("Error, la variable es tipo <"+ctx.type().getText()+"> y está tratando de usar un dato invalido sin inicializar.");
+
+
+            }else System.out.println("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.");
+
+        }else if (ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string")) {
+            tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+
+        }else {
+            System.out.println("Error, la variable <"+ctx.ID().getText()+"> ya está siendo utilizada por otro tipo.");
         }
         return null;
     }

@@ -39,6 +39,16 @@ public class TablaSimbolClass {
         return temp;
     }
 
+    public Ident buscarClaseYVar(String clase, String variable)
+    {
+        Ident temp=null;
+        for(Object nomb : tabla)
+            if (((Ident)nomb).className.equals(clase) && ((Ident)nomb).tok.getText().equals(variable))
+                return ((Ident)nomb);
+        return temp;
+    }
+
+
     public void openScope(){
         nivelActualClase++;
     }
@@ -49,7 +59,7 @@ public class TablaSimbolClass {
     }
 
     public void imprimir() {
-        System.out.println("\n----- INICIO TABLA ------ ");
+        System.out.println("\n----- INICIO TABLA CLASE------ ");
         for (Object o : tabla) {
             Token s = (Token) ((Ident) o).tok;
             System.out.println("Nombre: " + s.getText() + " - " + ((Ident) o).nivel + " - " + ((Ident) o).type + " - clase: "+((Ident) o).className);
