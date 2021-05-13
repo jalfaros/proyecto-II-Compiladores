@@ -108,6 +108,59 @@ public class AnalisisContextual extends miParserBaseVisitor {
     }
 
     @Override
+    public Object visitArrAssignAST(miParser.ArrAssignASTContext ctx) {
+
+        String simpleExpre1 = (String) this.visit(ctx.expression(0));
+        String simpleExpre2 = (String) this.visit(ctx.expression(1));
+
+        Ident id = null;
+        id = tabla.buscar(ctx.ID().getText());
+
+        if(id != null){
+            String type = id.type.substring(0, id.type.length()-2);
+
+            if(!id.initialited){
+                System.out.println("Error, el array <" + id.tok.getText() +"> No ha sido inicializado.");
+            }else if(!simpleExpre1.equals("int")){
+                System.out.println("Error, para acceder a la posición del arreglo debe ingresar un dato tipo int en el index.");
+
+            }else if (ctx.expression(1).getText().contains(".")){
+                String[] parts = ctx.expression(1).getText().split("\\.");
+                String part1 = parts[0]; // 123
+                String part2 = parts[1]; // 654321
+
+                Ident idExist = tabla.buscar(part1);
+
+                if(idExist != null) {//Busco en la tabla local si existe
+                    if (idExist.initialited){ //Viendo si la vara fue inicializada
+                        String clase = idExist.type;
+                        idExist = tablaClass.buscarClaseYVar(clase,part2); // busco la clase en la tabla de clases
+                        if (idExist != null) {
+                            if (clase.equals(idExist.className)) {//valida que la variable sea de esa clase al existir.
+                                //Valido que exista esa varible
+                                if (idExist.type.equals(type)) { //Valido que lo que se va a asignar sean iguales
+                                    if (!idExist.initialited) {//Valido que este inicializada
+                                        System.out.println("Error la variable que desea asignar no ha sido inicializado.");
+                                    }
+                                } else
+                                    System.out.println("Error, el array es tipo <" + id.type + "> y está tratando de inicializarlo con otro tipo.");
+                            } else System.out.println("Error, el dato que quiere asignar no existe.");
+                        }else System.out.println("Error, no se encuentra <"+part2+"> en < "+part1+" >.");
+                    }else System.out.println("Error, <"+part1+"> no a sido inicializada.");
+                }else System.out.println("Error, está asignando a <"+ctx.ID().getText()+"> un dato invalido.");
+
+            } else if(!type.equals(simpleExpre2)){
+                System.out.println("El array es de tipo \""+id.type+", debe asignar datos del mismo tipo al array.");
+            }
+        }else {
+            System.out.println("Error, el array "+ctx.ID() + " aún no ha sido declarado!");
+        }
+
+        return this.visit(ctx.expression(0));
+
+    }
+
+    @Override
     public Object visitPrintStaAST(miParser.PrintStaASTContext ctx) {
 
         if(this.visit(ctx.printStatement()) == null){
@@ -337,13 +390,25 @@ public class AnalisisContextual extends miParserBaseVisitor {
         //VALIDANDO SOLO LA DECLARACION
         if (ctx.ASSIGN() == null && idExist == null){
             if(ctx.type().getText().equals("boolean[]") || ctx.type().getText().equals("char[]") || ctx.type().getText().equals("int[]") || ctx.type().getText().equals("string[]")){
-                tabla.insertar(ctx.ID().getSymbol(),ctx.type().getText(),ctx);
+                Ident id = tabla.buscar(ctx.ID().getText());
+                if (id != null)
+                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                else {
+                    tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx); }
 
             }else if (ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string")){
-                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                Ident id = tabla.buscar(ctx.ID().getText());
+                if (id != null)
+                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                else {
+                    tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx); }
 
             }else if(classExist){
-                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                Ident id = tabla.buscar(ctx.ID().getText());
+                if (id != null)
+                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                else {
+                    tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx); }
 
             }else System.out.println("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.");
 
@@ -356,9 +421,13 @@ public class AnalisisContextual extends miParserBaseVisitor {
                         if (ctx.expression().getText().substring(0, 3).equals("new")) {
                             if (ctx.type().getText().equals((ctx.expression().getText().substring(3, ctx.type().getText().length() +1 )) + "[]" )) {
                                 if(this.visit(ctx.expression()).equals("int")) {
-                                    tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
-                                    idExist = tabla.buscar(ctx.ID().getText());
-                                    idExist.initialited = true;
+                                    Ident id = tabla.buscar(ctx.ID().getText());
+                                    if (id != null)
+                                        System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                                    else {
+                                        tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                                        idExist = tabla.buscar(ctx.ID().getText());
+                                        idExist.initialited = true;}
                                 } else System.out.println();
                             }else {
                                 System.out.println("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de inicializarlo con otro tipo.");
@@ -367,9 +436,13 @@ public class AnalisisContextual extends miParserBaseVisitor {
                         }else if(ctx.type().getText().equals(this.visit(ctx.expression()))){
                             idExist = tabla.buscar(ctx.expression().getText());
                             if(idExist.initialited){
-                                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
-                                idExist = tabla.buscar(ctx.ID().getText());
-                                idExist.initialited = true;
+                                Ident id = tabla.buscar(ctx.ID().getText());
+                                if (id != null)
+                                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                                else {
+                                    tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                                    idExist = tabla.buscar(ctx.ID().getText());
+                                    idExist.initialited = true;}
                             }else System.out.println("Error, el arreglo <"+ctx.expression().getText()+"> aún no ha sido inicializado.");
 
                         }else System.out.println("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de asignar otro tipo.");
@@ -378,18 +451,27 @@ public class AnalisisContextual extends miParserBaseVisitor {
                         if(ctx.type().getText().equals(this.visit(ctx.expression()))){
                             idExist = tabla.buscar(ctx.expression().getText());
                             if(idExist.initialited){
-                                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
-                                idExist = tabla.buscar(ctx.ID().getText());
-                                idExist.initialited = true;
+
+                                Ident id = tabla.buscar(ctx.ID().getText());
+                                if (id != null)
+                                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                                else {
+                                    tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                                    idExist = tabla.buscar(ctx.ID().getText());
+                                    idExist.initialited = true;}
                             }else System.out.println("Error, el arreglo <"+ctx.expression().getText()+"> aún no ha sido inicializado.");
 
                         }else System.out.println("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de inicializarlo con otro tipo.");
                     }
                 }else if (ctx.expression().getText().contains(".")) {
                     if(arrTyp != null){
-                        tabla.insertar(ctx.ID().getSymbol(),ctx.type().getText(),ctx);
-                        idExist = tabla.buscar(ctx.ID().getText());
-                        idExist.initialited = true;
+                        Ident id = tabla.buscar(ctx.ID().getText());
+                        if (id != null)
+                            System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                        else {
+                            tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                            idExist = tabla.buscar(ctx.ID().getText());
+                            idExist.initialited = true;}
                     }
                 }
 
@@ -405,9 +487,13 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                 System.out.println("Error, la variable <" + ctx.ID().getText()+ "> no puede ser asignada porque <"+id.tok.getText()+"> no ha sido inicializada.");
                             }
                         }else {
-                            tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
-                            idExist = tabla.buscar(ctx.ID().getText());
-                            idExist.initialited = true;
+                            id = tabla.buscar(ctx.ID().getText());
+                            if (id != null)
+                                System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                            else {
+                                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                                idExist = tabla.buscar(ctx.ID().getText());
+                                idExist.initialited = true;}
                         }
 
 
@@ -427,9 +513,15 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                     //Valido que exista esa varible
                                     if (idExist.type.equals(ctx.type().getText())) { //Valido que lo que se va a asignar sean iguales
                                         if (idExist.initialited) {//Valido que este inicializada
-                                            tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
-                                            idExist = tabla.buscar(ctx.ID().getText());
-                                            idExist.initialited = true;
+
+                                            Ident id = tabla.buscar(ctx.ID().getText());
+                                            if (id != null)
+                                                System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                                            else {
+                                                tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                                                idExist = tabla.buscar(ctx.ID().getText());
+                                                idExist.initialited = true;}
+
                                         } else
                                             System.out.println("Error, <" + part1 + "> no a sido inicializada.");
                                     } else
@@ -445,9 +537,14 @@ public class AnalisisContextual extends miParserBaseVisitor {
             }else if(classExist){
                 if (ctx.expression().getText().substring(0, 3).equals("new")) {
                     if (ctx.type().getText().equals((ctx.expression().getText().substring(3, ctx.expression().getText().length() -2 ))  )) {
-                        tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
-                        idExist = tabla.buscar(ctx.ID().getText());
-                        idExist.initialited = true;
+
+                        Ident id = tabla.buscar(ctx.ID().getText());
+                        if (id != null)
+                            System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                        else {
+                            tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                            idExist = tabla.buscar(ctx.ID().getText());
+                            idExist.initialited = true;}
                     }else {
                         System.out.println("Error, la variable es tipo <"+ctx.type().getText()+"> y está tratando de usar un dato invalido sin inicializar.");
                     }
@@ -458,7 +555,24 @@ public class AnalisisContextual extends miParserBaseVisitor {
             }else System.out.println("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.");
 
         }else if (ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string")) {
-            tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+
+            if (ctx.type().getText().equals(this.visit(ctx.expression()))){
+                Ident id = tabla.buscar(ctx.expression().getText());
+                if(id != null) {
+                    if (!id.initialited) {
+                        System.out.println("Error, la variable <" + ctx.ID().getText()+ "> no puede ser asignada porque <"+id.tok.getText()+"> no ha sido inicializada.");
+                    }
+                }else {
+                    id = tabla.buscar(ctx.ID().getText());
+                    if (id != null)
+                        System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                    else{
+                        tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
+                        idExist = tabla.buscar(ctx.ID().getText());
+                        idExist.initialited = true;}
+                }
+
+            }
 
         }else {
             System.out.println("Error, la variable <"+ctx.ID().getText()+"> ya está siendo utilizada por otro tipo.");
@@ -631,7 +745,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                 } else if (!idExp2.type.equals(id.type)) {
                     System.out.println("La asignación: <" + ctx.expression().getText() + ">, no corresponde al mismo tipo de dato!");
                 }
-            } else if (id.type.equals((ctx.expression().getText().substring(3, ctx.expression().getText().length()-2)))){
+            } else if (ctx.expression().getText().contains(id.type)){
                 try {
                     String test = (ctx.expression().getText().substring(0, 3));
                     if (test.equals("new")) {
@@ -653,7 +767,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
             }
 
         } else if (id == null) {
-            System.out.println("\"" + ctx.ID(0).getText() + "\" no ha sido declarado!!!");
+            System.out.println("\"" + ctx.ID(0).getText() + "\" no ha sido declarado!!! ");
         }
 
         return null;
@@ -997,7 +1111,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitArrayLokupFactAST(miParser.ArrayLokupFactASTContext ctx) {
-        System.out.println(this.visit(ctx.arrayLookup()));
+
         return this.visit(ctx.arrayLookup());
     }
 

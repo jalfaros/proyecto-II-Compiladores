@@ -1,24 +1,4 @@
 
-class test{
-    int j = 5;
-    int p = j;
-    string h = "lhlh";
-
-};
-
-class hola{
-    int h = 5;
-    int b = h;
-
-};
-
-test n;
-new test();
-
-
-char r = 'afd';
-
-
 
 
 
