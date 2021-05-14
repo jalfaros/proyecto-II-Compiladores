@@ -10,10 +10,12 @@ import java.util.Objects;
 
 public class AnalisisContextual extends miParserBaseVisitor {
     private TablaSimbolos tabla;
-
     private TablaSimbolClass tablaClass;
-    List<String> classes = new ArrayList<String>();
-    String arrTyp = null;
+    private List<String> classes = new ArrayList<String>();
+    List<Ident.Params> param = new ArrayList<Ident.Params>();
+     List<String> types = new ArrayList<String>();
+    private String arrTyp = null;
+    public String errors;
 
    public AnalisisContextual() {
 
@@ -35,6 +37,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                 return "boolean";
             default:
                 System.out.println(ctx.getText() + " no es un tipo de dato válido");
+                errors += (ctx.getText() + " no es un tipo de dato válido\n");
                 return null;
         }
     }
@@ -68,12 +71,12 @@ public class AnalisisContextual extends miParserBaseVisitor {
     @Override
     public Object visitProgramAST(miParser.ProgramASTContext ctx) {
         //System.out.println(ctx.getClass().getSimpleName() + "VisitProgramAST");
-        tabla.openScope();
+        //.openScope();
         for (int i = 0; i < ctx.statement().size(); i++) {
             this.visit(ctx.statement(i));
         }
         tabla.imprimir();
-        tabla.closeScope();
+        //tabla.closeScope();
 
         return null;
     }
@@ -121,8 +124,10 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
             if(!id.initialited){
                 System.out.println("Error, el array <" + id.tok.getText() +"> No ha sido inicializado.");
+                errors += ("Error, el array <" + id.tok.getText() +"> No ha sido inicializado.\n");
             }else if(!simpleExpre1.equals("int")){
                 System.out.println("Error, para acceder a la posición del arreglo debe ingresar un dato tipo int en el index.");
+                errors += ("Error, para acceder a la posición del arreglo debe ingresar un dato tipo int en el index.\n");
 
             }else if (ctx.expression(1).getText().contains(".")){
                 String[] parts = ctx.expression(1).getText().split("\\.");
@@ -141,11 +146,21 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                 if (idExist.type.equals(type)) { //Valido que lo que se va a asignar sean iguales
                                     if (!idExist.initialited) {//Valido que este inicializada
                                         System.out.println("Error la variable que desea asignar no ha sido inicializado.");
+                                        errors+= ("Error la variable que desea asignar no ha sido inicializado.\n");
                                     }
-                                } else
+                                } else {
                                     System.out.println("Error, el array es tipo <" + id.type + "> y está tratando de inicializarlo con otro tipo.");
-                            } else System.out.println("Error, el dato que quiere asignar no existe.");
-                        }else System.out.println("Error, no se encuentra <"+part2+"> en < "+part1+" >.");
+                                    errors += ("Error, el array es tipo <" + id.type + "> y está tratando de inicializarlo con otro tipo.\n");
+                                }
+                            } else {
+                                errors += ("Error, el dato que quiere asignar no existe.\n");
+                                System.out.println("Error, el dato que quiere asignar no existe.");
+                            }
+
+                        }else {
+                            errors += ("Error, no se encuentra <" + part2 + "> en < " + part1 + " >.\n");
+                            System.out.println("Error, no se encuentra <" + part2 + "> en < " + part1 + " >.");
+                        }
                     }else System.out.println("Error, <"+part1+"> no a sido inicializada.");
                 }else System.out.println("Error, está asignando a <"+ctx.ID().getText()+"> un dato invalido.");
 
@@ -172,13 +187,21 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitIfStaAST(miParser.IfStaASTContext ctx) {
+        tabla.openScope();
         this.visit(ctx.ifStatement());
+        tabla.closeScope();
         return null;
     }
 
     @Override
     public Object visitWhileStaAST(miParser.WhileStaASTContext ctx) {
+
+        tabla.openScope();
         this.visit(ctx.whileStatement());
+        tabla.closeScope();
+
+        System.out.println("\n imprimiendo desde el while.");
+        tabla.imprimir();
         return null;
     }
 
@@ -208,7 +231,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
         for (miParser.StatementContext c: ctx.statement())
             this.visit(c);
 
-        System.out.println(" La tabla de la clase ");
         tabla.imprimir();
         tabla.closeScope();
         return null;
@@ -222,28 +244,54 @@ public class AnalisisContextual extends miParserBaseVisitor {
      */
     @Override
     public Object visitFunctionDeclAST(miParser.FunctionDeclASTContext ctx) {
-        this.visit(ctx.type());
-        this.visit(ctx.formalParams());
+
+        //List<Ident.Params>
+        Object id = null;
+
+        if(ctx.type() != null){
+            id = this.visit(ctx.type());
+
+            if (id.equals("int") || id.equals("boolean") || id.equals("char") || id.equals("string")){
+                tabla.agregarParams(ctx.ID().getSymbol(), (String) id, ctx, param);
+                Ident t = tabla.buscar(ctx.ID().getText());
+                t.initialited = true;
+            }else{
+                System.out.println("Error, no se permite este tipo de dato en las funciones.");
+            }
+        }
+
+        tabla.openScope();
+        if(ctx.formalParams() != null){
+            this.visit(ctx.formalParams());
+        }
         this.visit(ctx.block());
-        return null;
+        tabla.closeScope();
+
+        return ctx;
     }
 
     @Override
+
     public Object visitFParamsAST(miParser.FParamsASTContext ctx) {
-        for(miParser.FormalParamContext c: ctx.formalParam()){
-            this.visit(c);
+        param.clear();
+
+        for (int i = 0; i < ctx.formalParam().size(); i++) {
+            param.add((Ident.Params) this.visit(ctx.formalParam(i)));
         }
-        return null;
+        ctx.cantParams = ctx.formalParam().size();
+        return param;
     }
 
     @Override
     public Object visitFParamAST(miParser.FParamASTContext ctx) {
-        this.visit(ctx.type());
-        return null;
+
+        Object type = this.visit(ctx.type());
+        return new Ident.Params( ctx.ID().getText(), (String) type);
     }
 
     @Override
     public Object visitWhileStmmtAST(miParser.WhileStmmtASTContext ctx) {
+
         Object expr = this.visit(ctx.expression());
 
         if(expr == null ){
@@ -252,6 +300,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
         this.visit(ctx.expression());
         this.visit(ctx.block());
+
         return null;
     }
 
@@ -268,8 +317,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
             this.visit(ctx.block(1));
         }
-
-
 
 
         return null;
@@ -372,7 +419,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
         ctxVar = ctx;
 
 
-        return "hola";
+        return null;
     }
 
     @Override
@@ -1217,15 +1264,61 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitFunctionCallAST(miParser.FunctionCallASTContext ctx) {
-        this.visit(ctx.actualParams());
-        return null;
+
+        Ident id = tabla.buscar(ctx.ID().getText());
+        if (id == null){
+            System.out.println("Error <"+ctx.ID().getText()+"> No no ha sido declarado!!!");
+        }else{
+            Object test = ctx.actualParams();
+            if (test != null){
+                this.visit(ctx.actualParams());
+                Object test2 = (( ((miParser.FunctionDeclASTContext) id.declCtx).formalParams()));
+                if (test2 != null){
+                    if (ctx.actualParams().cantParams != ( ((miParser.FunctionDeclASTContext) id.declCtx).formalParams()).cantParams){
+                        System.out.println("Error en la llamada del método, cantidad de parámetros diferente a la declaración");
+                        return id.type;
+                    }
+                }else{
+                    if (ctx.actualParams().cantParams > 0){
+                        System.out.println("Error en la llamada del método, cantidad de parámetros diferente a la declaración");
+                        return id.type;
+                    }
+                }
+            }else{
+                try {
+                    if ((((miParser.FunctionDeclASTContext) id.declCtx).formalParams()).cantParams > 0){
+                        System.out.println("Error en la llamada del método, cantidad de parámetros diferente a la declaración");
+                        return id.type;
+                    }
+                }catch (Exception ignored){
+                    return id.type;
+                }
+
+            }
+            for (int i = 0; i < id.listParams.size(); i++) {
+
+                if(!types.get(i).equals(id.listParams.get(i).type))
+                    System.out.println("Error, el parametro es tipo <"+id.listParams.get(i).type+"> y está ingresando un tipo <"+types.get(i)+">.");
+
+
+            }
+            return id.type;
+        }
+        return ctx.ID();
     }
 
     @Override
     public Object visitActualParamsAST(miParser.ActualParamsASTContext ctx) {
-        for (miParser.ExpressionContext c: ctx.expression())
-            this.visit(c);
-        return null;
+        types.clear();
+
+        for (int i = 0; i < ctx.expression().size(); i++) {
+            types.add((String) this.visit(ctx.expression(i)));
+            this.visit(ctx.expression(i));
+        }
+
+        ctx.cantParams = ctx.expression().size();
+
+        return ctx;
     }
 
     @Override

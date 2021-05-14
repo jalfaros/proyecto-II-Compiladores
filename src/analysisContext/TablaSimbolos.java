@@ -3,6 +3,7 @@ package analysisContext;
 import org.antlr.v4.runtime.*;
 
 import java.util.LinkedList;
+import java.util.List;
 
 public class TablaSimbolos {
     LinkedList<Object> tabla;
@@ -17,7 +18,13 @@ public class TablaSimbolos {
 
     public void insertar(Token id, String tipo, ParserRuleContext decl){
         //no se puede insertar un elemento repetido en el mismo nivel
-        Ident i = new Ident(id,tipo,decl, nivelActual, "");
+        Ident i = new Ident(id,tipo,decl, nivelActual, "", null );
+        tabla.addFirst(i);
+    }
+
+    public void agregarParams(Token id, String tipo, ParserRuleContext decl, List<Ident.Params> params){
+        //no se puede insertar un elemento repetido en el mismo nivel
+        Ident i = new Ident(id,tipo,decl, nivelActual, "", params );
         tabla.addFirst(i);
     }
 

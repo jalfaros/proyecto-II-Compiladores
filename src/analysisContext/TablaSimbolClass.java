@@ -17,7 +17,7 @@ public class TablaSimbolClass {
 
     public void insertar(Token id, String tipo, ParserRuleContext decl,String className){
         //no se puede insertar un elemento repetido en el mismo nivel
-        Ident i = new Ident(id,tipo,decl, nivelActualClase, className);
+        Ident i = new Ident(id,tipo,decl, nivelActualClase, className, null);
         tabla.addFirst(i);
     }
 

@@ -20,9 +20,11 @@ statement:
 
 block                     : KEYIZQ ( statement )* KEYDER 												#blockAST;
 
-funtionDeclaration        : type ID PIZQ ( formalParams )? PDER block 									#functionDeclAST;
+funtionDeclaration        : type ID PIZQ ( formalParams )? PDER block PyCOMA 							#functionDeclAST;
 
-formalParams        : formalParam ( COMA formalParam)* 													#fParamsAST;
+formalParams
+locals [int cantParams = 0 ]
+     : formalParam ( COMA formalParam)* 													            #fParamsAST;
 
 formalParam         : type ID																			#fParamAST;
 
@@ -81,7 +83,9 @@ subExpression    : PIZQ expression PDER                                         
 
 funtionCall      : ID PIZQ (actualParams)? PDER 														#functionCallAST;
 
-actualParams     : expression (COMA expression)* 														#actualParamsAST;
+actualParams
+locals [int cantParams = 0 ]
+    : expression (COMA expression)* 														            #actualParamsAST;
 
 arrayLookup      : ID PCIZQ expression PCDER                                                            #arrLookupAST;
 
