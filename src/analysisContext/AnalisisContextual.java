@@ -36,7 +36,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
             case "boolean":
                 return "boolean";
             default:
-                System.out.println(ctx.getText() + " no es un tipo de dato válido");
+                errors +=(ctx.getText() + " no es un tipo de dato válido\n");
                 errors += (ctx.getText() + " no es un tipo de dato válido\n");
                 return null;
         }
@@ -70,13 +70,10 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitProgramAST(miParser.ProgramASTContext ctx) {
-        //System.out.println(ctx.getClass().getSimpleName() + "VisitProgramAST");
-        //.openScope();
+
         for (int i = 0; i < ctx.statement().size(); i++) {
             this.visit(ctx.statement(i));
         }
-        tabla.imprimir();
-        //tabla.closeScope();
 
         return null;
     }
@@ -123,10 +120,8 @@ public class AnalisisContextual extends miParserBaseVisitor {
             String type = id.type.substring(0, id.type.length()-2);
 
             if(!id.initialited){
-                System.out.println("Error, el array <" + id.tok.getText() +"> No ha sido inicializado.");
                 errors += ("Error, el array <" + id.tok.getText() +"> No ha sido inicializado.\n");
             }else if(!simpleExpre1.equals("int")){
-                System.out.println("Error, para acceder a la posición del arreglo debe ingresar un dato tipo int en el index.");
                 errors += ("Error, para acceder a la posición del arreglo debe ingresar un dato tipo int en el index.\n");
 
             }else if (ctx.expression(1).getText().contains(".")){
@@ -145,30 +140,28 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                 //Valido que exista esa varible
                                 if (idExist.type.equals(type)) { //Valido que lo que se va a asignar sean iguales
                                     if (!idExist.initialited) {//Valido que este inicializada
-                                        System.out.println("Error la variable que desea asignar no ha sido inicializado.");
                                         errors+= ("Error la variable que desea asignar no ha sido inicializado.\n");
                                     }
                                 } else {
-                                    System.out.println("Error, el array es tipo <" + id.type + "> y está tratando de inicializarlo con otro tipo.");
                                     errors += ("Error, el array es tipo <" + id.type + "> y está tratando de inicializarlo con otro tipo.\n");
                                 }
                             } else {
                                 errors += ("Error, el dato que quiere asignar no existe.\n");
-                                System.out.println("Error, el dato que quiere asignar no existe.");
                             }
 
                         }else {
                             errors += ("Error, no se encuentra <" + part2 + "> en < " + part1 + " >.\n");
-                            System.out.println("Error, no se encuentra <" + part2 + "> en < " + part1 + " >.");
                         }
-                    }else System.out.println("Error, <"+part1+"> no a sido inicializada.");
-                }else System.out.println("Error, está asignando a <"+ctx.ID().getText()+"> un dato invalido.");
+                    } else{ errors += ("Error, <" + part1 + "> no a sido inicializada.\n");
+                    }
+
+                }else errors +=("Error, está asignando a <"+ctx.ID().getText()+"> un dato invalido.\n");
 
             } else if(!type.equals(simpleExpre2)){
-                System.out.println("El array es de tipo \""+id.type+", debe asignar datos del mismo tipo al array.");
+                errors +=("El array es de tipo \""+id.type+", debe asignar datos del mismo tipo al array.\n");
             }
         }else {
-            System.out.println("Error, el array "+ctx.ID() + " aún no ha sido declarado!");
+            errors +=("Error, el array "+ctx.ID() + " aún no ha sido declarado!\n");
         }
 
         return this.visit(ctx.expression(0));
@@ -179,7 +172,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
     public Object visitPrintStaAST(miParser.PrintStaASTContext ctx) {
 
         if(this.visit(ctx.printStatement()) == null){
-            System.out.println("Error, está intentando imprimir algo que no existe!");
+            errors +=("Error, está intentando imprimir algo que no existe!\n");
         }
 
         return null;
@@ -227,12 +220,9 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitBlockAST(miParser.BlockASTContext ctx) {
-       tabla.openScope();
         for (miParser.StatementContext c: ctx.statement())
             this.visit(c);
 
-        tabla.imprimir();
-        tabla.closeScope();
         return null;
 
     }
@@ -256,7 +246,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                 Ident t = tabla.buscar(ctx.ID().getText());
                 t.initialited = true;
             }else{
-                System.out.println("Error, no se permite este tipo de dato en las funciones.");
+                errors +=("Error, no se permite este tipo de dato en las funciones.\n");
             }
         }
 
@@ -295,7 +285,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
         Object expr = this.visit(ctx.expression());
 
         if(expr == null ){
-            System.out.println("Error, el operador en el \"while\" es invalido.");
+            errors +=("Error, el operador en el \"while\" es invalido.\n");
         }
 
         this.visit(ctx.expression());
@@ -309,7 +299,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
         Object expr = this.visit(ctx.expression());
 
         if(expr == null ){
-            System.out.println("Error, el operador en el \"if\" es invalido.");
+            errors +=("Error, el operador en el \"if\" es invalido.\n");
         }
         this.visit(ctx.block(0));
 
@@ -326,7 +316,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
     public Object visitReturnStmntAST(miParser.ReturnStmntASTContext ctx) {
 
         if(this.visit(ctx.expression()) == null){
-            System.out.println("Está retornando un dato invalido.");
+            errors +=("Está retornando un dato invalido.\n");
         }
         this.visit(ctx.expression());
         return null;
@@ -364,18 +354,18 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                 tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
                                 id = tablaClass.buscar(ctxVar.ID().getText());
                                 id.initialited = true;
-                            }else System.out.println("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.");
+                            }else errors +=("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.\n");
                         }else if (id != null){
                             if (id.type.equals(ctxVar.stype().getText())){
                                 tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
                                 id = tablaClass.buscar(ctxVar.ID().getText());
                                 id.initialited = true;
-                            }else System.out.println("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.");
+                            }else errors +=("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.\n");
 
-                        } else System.out.println("Error, el dato que le quiere asignar a <"+ctxVar.ID()+"> en la clase <"+ctx.ID().getText() +">, no es un tipo de dato valido.");
+                        } else errors +=("Error, el dato que le quiere asignar a <"+ctxVar.ID()+"> en la clase <"+ctx.ID().getText() +">, no es un tipo de dato valido.\n");
 
                     }else{
-                        System.out.println("Error, ya existe en la clase <"+ctx.ID().getText() +"> una variable con el nombre <"+ ctxVar.ID().getText() + ">.");
+                        errors +=("Error, ya existe en la clase <"+ctx.ID().getText() +"> una variable con el nombre <"+ ctxVar.ID().getText() + ">.\n");
                     }
                 }else {
                     id = tablaClass.buscarClaseYVar(ctx.ID().getText(),ctxVar.expression().getText());
@@ -384,15 +374,15 @@ public class AnalisisContextual extends miParserBaseVisitor {
                             tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
                             id = tablaClass.buscar(ctxVar.ID().getText());
                             id.initialited = true;
-                        }else System.out.println("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.");
+                        }else errors +=("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.\n");
                     }else if (id != null){
                         if (id.type.equals(ctxVar.stype().getText())){
                             tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
                             id = tablaClass.buscar(ctxVar.ID().getText());
                             id.initialited = true;
-                        }else System.out.println("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.");
+                        }else errors +=("Esta tratando de asignar a <"+ctxVar.expression().getText()+"> un tipo de dato distinto.\n");
 
-                    } else System.out.println("Error, el dato que le quiere asignar a <"+ctxVar.ID()+"> en la clase <"+ctx.ID().getText() +">, no es un tipo de dato valido.");
+                    } else errors +=("Error, el dato que le quiere asignar a <"+ctxVar.ID()+"> en la clase <"+ctx.ID().getText() +">, no es un tipo de dato valido.\n");
 
                 }
 
@@ -402,7 +392,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     if (!id.className.equals(ctx.ID().getText())){
                         tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
                     }else{
-                        System.out.println("Error, ya existe en la clase <"+ctx.ID().getText() +"> una variable con el nombre <"+ ctxVar.ID().getText() + ">.");
+                        errors +=("Error, ya existe en la clase <"+ctx.ID().getText() +"> una variable con el nombre <"+ ctxVar.ID().getText() + ">.\n");
                     }
                 }else {
                     tablaClass.insertar(ctxVar.ID().getSymbol(), ctxVar.stype().getText(), ctxVar, ctx.ID().getText());
@@ -417,8 +407,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
     public Object visitClassVariableDeclAST(miParser.ClassVariableDeclASTContext ctx) {
 
         ctxVar = ctx;
-
-
         return null;
     }
 
@@ -439,25 +427,25 @@ public class AnalisisContextual extends miParserBaseVisitor {
             if(ctx.type().getText().equals("boolean[]") || ctx.type().getText().equals("char[]") || ctx.type().getText().equals("int[]") || ctx.type().getText().equals("string[]")){
                 Ident id = tabla.buscar(ctx.ID().getText());
                 if (id != null)
-                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                    errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                 else {
                     tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx); }
 
             }else if (ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string")){
                 Ident id = tabla.buscar(ctx.ID().getText());
                 if (id != null)
-                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                    errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                 else {
                     tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx); }
 
             }else if(classExist){
                 Ident id = tabla.buscar(ctx.ID().getText());
                 if (id != null)
-                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                    errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                 else {
                     tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx); }
 
-            }else System.out.println("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.");
+            }else errors +=("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.\n");
 
         //VALIDANDO DECLARACION Y ASIGNACION
         }else if(ctx.ASSIGN() != null && idExist == null){
@@ -470,14 +458,14 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                 if(this.visit(ctx.expression()).equals("int")) {
                                     Ident id = tabla.buscar(ctx.ID().getText());
                                     if (id != null)
-                                        System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                                        errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                                     else {
                                         tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
                                         idExist = tabla.buscar(ctx.ID().getText());
                                         idExist.initialited = true;}
                                 } else System.out.println();
                             }else {
-                                System.out.println("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de inicializarlo con otro tipo.");
+                                errors +=("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de inicializarlo con otro tipo.\n");
                             }
 
                         }else if(ctx.type().getText().equals(this.visit(ctx.expression()))){
@@ -485,14 +473,14 @@ public class AnalisisContextual extends miParserBaseVisitor {
                             if(idExist.initialited){
                                 Ident id = tabla.buscar(ctx.ID().getText());
                                 if (id != null)
-                                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                                    errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                                 else {
                                     tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
                                     idExist = tabla.buscar(ctx.ID().getText());
                                     idExist.initialited = true;}
-                            }else System.out.println("Error, el arreglo <"+ctx.expression().getText()+"> aún no ha sido inicializado.");
+                            }else errors +=("Error, el arreglo <"+ctx.expression().getText()+"> aún no ha sido inicializado.\n");
 
-                        }else System.out.println("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de asignar otro tipo.");
+                        }else errors +=("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de asignar otro tipo.\n");
 
                     } catch (Exception e) {
                         if(ctx.type().getText().equals(this.visit(ctx.expression()))){
@@ -501,20 +489,20 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
                                 Ident id = tabla.buscar(ctx.ID().getText());
                                 if (id != null)
-                                    System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                                    errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                                 else {
                                     tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
                                     idExist = tabla.buscar(ctx.ID().getText());
                                     idExist.initialited = true;}
-                            }else System.out.println("Error, el arreglo <"+ctx.expression().getText()+"> aún no ha sido inicializado.");
+                            }else errors +=("Error, el arreglo <"+ctx.expression().getText()+"> aún no ha sido inicializado.\n");
 
-                        }else System.out.println("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de inicializarlo con otro tipo.");
+                        }else errors +=("Error, el array es tipo <"+ctx.type().getText()+"> y está tratando de inicializarlo con otro tipo.\n");
                     }
                 }else if (ctx.expression().getText().contains(".")) {
                     if(arrTyp != null){
                         Ident id = tabla.buscar(ctx.ID().getText());
                         if (id != null)
-                            System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                            errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                         else {
                             tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
                             idExist = tabla.buscar(ctx.ID().getText());
@@ -522,21 +510,20 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     }
                 }
 
-                else System.out.println("Error, el dato que trata de asignar a <"+ctx.ID().getText()+"> aún no ha sido declarado.");
+                else errors +=("Error, el dato que trata de asignar a <"+ctx.ID().getText()+"> aún no ha sido declarado.\n");
 
             //VALIDANDO VARIABLES
             }else if ((ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string"))){
-                //System.out.println(this.visit(ctx.expression()) + " "+ ctx.expression().getText());
                 if (ctx.type().getText().equals(this.visit(ctx.expression()))){
                     Ident id = tabla.buscar(ctx.expression().getText());
                         if(id != null) {
                             if (!id.initialited) {
-                                System.out.println("Error, la variable <" + ctx.ID().getText()+ "> no puede ser asignada porque <"+id.tok.getText()+"> no ha sido inicializada.");
+                                errors +=("Error, la variable <" + ctx.ID().getText()+ "> no puede ser asignada porque <"+id.tok.getText()+"> no ha sido inicializada.\n");
                             }
                         }else {
                             id = tabla.buscar(ctx.ID().getText());
                             if (id != null)
-                                System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                                errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                             else {
                                 tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
                                 idExist = tabla.buscar(ctx.ID().getText());
@@ -563,22 +550,22 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
                                             Ident id = tabla.buscar(ctx.ID().getText());
                                             if (id != null)
-                                                System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                                                errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                                             else {
                                                 tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
                                                 idExist = tabla.buscar(ctx.ID().getText());
                                                 idExist.initialited = true;}
 
                                         } else
-                                            System.out.println("Error, <" + part1 + "> no a sido inicializada.");
+                                            errors +=("Error, <" + part1 + "> no a sido inicializada.\n");
                                     } else
-                                        System.out.println("Error, la variable es tipo <" + ctx.type().getText() + "> y está tratando de inicializarlo con otro tipo.");
-                                } else System.out.println("Error, el dato que quiere asignar no existe.");
-                            }else System.out.println("Error, no se encuentra <"+part2+"> en < "+part1+" >.");
-                        }else System.out.println("Error, <"+part1+"> no a sido inicializada.");
-                    }else System.out.println("Error, está asignando a <"+ctx.ID().getText()+"> un dato invalido.");
+                                        errors +=("Error, la variable es tipo <" + ctx.type().getText() + "> y está tratando de inicializarlo con otro tipo.\n");
+                                } else errors +=("Error, el dato que quiere asignar no existe.\n");
+                            }else errors +=("Error, no se encuentra <"+part2+"> en < "+part1+" >.\n");
+                        }else errors +=("Error, <"+part1+"> no a sido inicializada.\n");
+                    }else errors +=("Error, está asignando a <"+ctx.ID().getText()+"> un dato invalido.\n");
 
-                }else System.out.println("Error, el dato que se quiere asignar a <"+ctx.ID().getText()+"> no es un dato valido.");
+                }else errors +=("Error, el dato que se quiere asignar a <"+ctx.ID().getText()+"> no es un dato valido.\n");
                 //----------------------------------------------------------------------------------------
 
             }else if(classExist){
@@ -587,19 +574,19 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
                         Ident id = tabla.buscar(ctx.ID().getText());
                         if (id != null)
-                            System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                            errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                         else {
                             tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
                             idExist = tabla.buscar(ctx.ID().getText());
                             idExist.initialited = true;}
                     }else {
-                        System.out.println("Error, la variable es tipo <"+ctx.type().getText()+"> y está tratando de usar un dato invalido sin inicializar.");
+                        errors +=("Error, la variable es tipo <"+ctx.type().getText()+"> y está tratando de usar un dato invalido sin inicializar.\n");
                     }
 
-                }else System.out.println("Error, la variable es tipo <"+ctx.type().getText()+"> y está tratando de usar un dato invalido sin inicializar.");
+                }else errors +=("Error, la variable es tipo <"+ctx.type().getText()+"> y está tratando de usar un dato invalido sin inicializar.\n");
 
 
-            }else System.out.println("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.");
+            }else errors +=("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.\n");
 
         }else if (ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string")) {
 
@@ -607,12 +594,12 @@ public class AnalisisContextual extends miParserBaseVisitor {
                 Ident id = tabla.buscar(ctx.expression().getText());
                 if(id != null) {
                     if (!id.initialited) {
-                        System.out.println("Error, la variable <" + ctx.ID().getText()+ "> no puede ser asignada porque <"+id.tok.getText()+"> no ha sido inicializada.");
+                        errors +=("Error, la variable <" + ctx.ID().getText()+ "> no puede ser asignada porque <"+id.tok.getText()+"> no ha sido inicializada.\n");
                     }
                 }else {
                     id = tabla.buscar(ctx.ID().getText());
                     if (id != null)
-                        System.out.println("Error, la variable <"+id.tok.getText()+"> ya existe.");
+                        errors +=("Error, la variable <"+id.tok.getText()+"> ya existe.\n");
                     else{
                         tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), ctx);
                         idExist = tabla.buscar(ctx.ID().getText());
@@ -622,7 +609,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
             }
 
         }else {
-            System.out.println("Error, la variable <"+ctx.ID().getText()+"> ya está siendo utilizada por otro tipo.");
+            errors +=("Error, la variable <"+ctx.ID().getText()+"> ya está siendo utilizada por otro tipo.\n");
         }
         return null;
     }
@@ -671,7 +658,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                 if(idExist.type.equals(this.visit(ctx.expression()))){
                                     if(id != null) {
                                         if (!id.initialited) {
-                                            System.out.println("Error, la variable <" + id.tok.getText() + "> no puede ser asignada porque no se le ha asignado ningún dato.");
+                                            errors +=("Error, la variable <" + id.tok.getText() + "> no puede ser asignada porque no se le ha asignado ningún dato.\n");
                                         }
                                     }else {
                                         idExist = tablaClass.buscarClaseYVar(idExist.className,part2);
@@ -679,7 +666,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                     }
                                 }else {
                                     if (!idExist.type.equals(this.visit(ctx.expression()))){
-                                        System.out.println("Error, no se le puede asignar a un tipo <"+idExist.type +"> un tipo <"+this.visit(ctx.expression())+">.");
+                                        errors +=("Error, no se le puede asignar a un tipo <"+idExist.type +"> un tipo <"+this.visit(ctx.expression())+">.\n");
                                     }
                                 }
                             }else{
@@ -702,21 +689,20 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                                             idExist = tablaClass.buscarClaseYVar(expre1.className,part2);
                                                             idExist.initialited = true;
                                                         } else
-                                                            System.out.println("Error, <" + idExist.tok.getText() + "> no a sido inicializada.");
+                                                            errors +=("Error, <" + idExist.tok.getText() + "> no a sido inicializada.\n");
                                                     } else
-                                                        System.out.println("Error, la variable es tipo <" + expre1.type + "> y está tratando de inicializarlo con otro tipo.");
-                                                } else System.out.println("Error, el dato que quiere asignar no existe.");
-                                            }else System.out.println("Error, no se encuentra <"+point2+"> en < "+point1+" >.");
-                                        }else System.out.println("Error, <"+point1+"> no a sido inicializada.");
-                                    }else System.out.println("Error, está asignando a <"+expre1.tok.getText()+"> un dato invalido.");
+                                                        errors +=("Error, la variable es tipo <" + expre1.type + "> y está tratando de inicializarlo con otro tipo.\n");
+                                                } else errors +=("Error, el dato que quiere asignar no existe.\n");
+                                            }else errors +=("Error, no se encuentra <"+point2+"> en < "+point1+" >.\n");
+                                        }else errors +=("Error, <"+point1+"> no a sido inicializada.");
+                                    }else errors +=("Error, está asignando a <"+expre1.tok.getText()+"> un dato invalido.\n");
 
-                                }else System.out.println("Error, a <"+part1+"."+part2+"> no se puede asignar un dato que no es válido.");
-
+                                }else errors +=("Error, a <"+part1+"."+part2+"> no se puede asignar un dato que no es válido.\n");
                             }
-                        } else System.out.println("Error, el dato que quiere asignar no existe.");
-                    }else System.out.println("Error, no se encuentra <"+part2+"> en < "+part1+" >.");
-                }else System.out.println("Error, <"+part1+"> no a sido inicializada.");
-            }else System.out.println("Error, está asignando a <"+ctx.ID(0).getText()+"> un dato invalido.");
+                        } else errors +=("Error, el dato que quiere asignar no existe.\n");
+                    }else errors +=("Error, no se encuentra <"+part2+"> en < "+part1+" >.\n");
+                }else errors +=("Error, <"+part1+"> no a sido inicializada.\n");
+            }else errors +=("Error, está asignando a <"+ctx.ID(0).getText()+"> un dato invalido.\n");
             return null;
         }
 
@@ -730,12 +716,12 @@ public class AnalisisContextual extends miParserBaseVisitor {
             if (idExp2 != null) {
                 if (idExp2.type.substring(idExp2.type.length() - 2, idExp2.type.length()).equals("[]"))
                     if (!idExp2.initialited)
-                        System.out.println("Error, el array \"" + ctx.expression().getText() + "\" no ha sido inicializado.");
+                        errors +=("Error, el array \"" + ctx.expression().getText() + "\" no ha sido inicializado.\n");
                     else if (!id.initialited)
-                        System.out.println("Error, el array \"" + ctx.ID(0).getText() + "\" no ha sido inicializado.");
+                        errors +=("Error, el array \"" + ctx.ID(0).getText() + "\" no ha sido inicializado.\n");
 
                     else if (!id.type.equals(idExp2.type))
-                        System.out.println("Error, el array \"" + ctx.expression().getText() + "\" no es del mismo tipo.");
+                        errors +=("Error, el array \"" + ctx.expression().getText() + "\" no es del mismo tipo.\n");
 
             } else if (id.type.substring(id.type.length() - 2, id.type.length()).equals("[]")) {
 
@@ -744,18 +730,18 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     if (test.equals("new")) {
                         String test2 = (ctx.expression().getText().substring(3, 1 + id.type.length()));
                         if (!id.type.equals((test2 + "[]"))) {
-                            System.out.println("Error, el array es tipo \"" + id.type + "\" y está tratando de inicializar con un tipo de dato diferente");
+                            errors +=("Error, el array es tipo \"" + id.type + "\" y está tratando de inicializar con un tipo de dato diferente\n");
                         } else if (exprType.equals("int")) {
-                            System.out.println("Agregando la inicializacion, en el asssingAST a: " + ctx.ID(0).getText());
+                            errors +=("Agregando la inicializacion, en el asssingAST a: " + ctx.ID(0).getText()+".\n");
                             id.initialited = true;
                         }
                     } else if (!id.initialited)
-                        System.out.println("El arreglo \" " + ctx.ID(0).getText() + " \" aún no ha sido inicializado.");
+                        errors +=("El arreglo \" " + ctx.ID(0).getText() + " \" aún no ha sido inicializado.\n");
                     else if(!exprType.equals((id.type.substring(0,id.type.length()-2)))){
-                        System.out.println("Error, al arreglo no se le permite asignar de esta manera.");
+                        errors +=("Error, al arreglo no se le permite asignar de esta manera.\n");
                     }
                 } catch (Exception e) {
-                    System.out.println("Error, no es la manera correcta para asignar a un array.");
+                    errors +=("Error, no es la manera correcta para asignar a un array.\n");
                 }
 
 
@@ -779,42 +765,40 @@ public class AnalisisContextual extends miParserBaseVisitor {
                                             idExist = tablaClass.buscarClaseYVar(clase,point2);
                                             idExist.initialited = true;
                                         } else
-                                            System.out.println("Error, <" + idExist.tok.getText() + "> no a sido inicializada.");
+                                            errors +=("Error, <" + idExist.tok.getText() + "> no a sido inicializada.\n");
                                     } else
-                                        System.out.println("Error, la variable es tipo <" + id.type + "> y está tratando de inicializarlo con otro tipo.");
-                                } else System.out.println("Error, el dato que quiere asignar no existe.");
-                            }else System.out.println("Error, no se encuentra <"+point2+"> en < "+point1+" >.");
-                        }else System.out.println("Error, <"+point1+"> no a sido inicializada.");
-                    }else System.out.println("Error, está asignando a <"+id.tok.getText()+"> un dato invalido.");
+                                        errors +=("Error, la variable es tipo <" + id.type + "> y está tratando de inicializarlo con otro tipo.\n");
+                                } else errors +=("Error, el dato que quiere asignar no existe.\n");
+                            }else errors +=("Error, no se encuentra <"+point2+"> en < "+point1+" >.\n");
+                        }else errors +=("Error, <"+point1+"> no a sido inicializada.");
+                    }else errors +=("Error, está asignando a <"+id.tok.getText()+"> un dato invalido.\n");
 
                 }else if (idExp2 == null) {
-                    System.out.println(" <" + ctx.expression().getText() + ">, no corresponde a un tipo de dato o no ha sido declaradooo!");
+                    errors +=(" <" + ctx.expression().getText() + ">, no corresponde a un tipo de dato o no ha sido declaradooo!\n");
                 } else if (!idExp2.type.equals(id.type)) {
-                    System.out.println("La asignación: <" + ctx.expression().getText() + ">, no corresponde al mismo tipo de dato!");
+                    errors +=("La asignación: <" + ctx.expression().getText() + ">, no corresponde al mismo tipo de dato!\n");
                 }
             } else if (ctx.expression().getText().contains(id.type)){
                 try {
                     String test = (ctx.expression().getText().substring(0, 3));
                     if (test.equals("new")) {
                         String test2 = (ctx.expression().getText().substring(3, ctx.expression().getText().length() - 2 ));
-                        System.out.println(test2);
                         if (!id.type.equals((test2))) {
-                            System.out.println("Error, la variable es tipo \"" + id.type + "\" y está tratando de inicializar con un tipo de dato diferente");
+                            errors +=("Error, la variable es tipo \"" + id.type + "\" y está tratando de inicializar con un tipo de dato diferente\n");
                         } else{
-                            System.out.println(id.tok.getText());
                             id.initialited = true;
                         }
                     } else if (!id.initialited)
-                        System.out.println("El arreglo \" " + ctx.ID(0).getText() + " \" aún no ha sido inicializado.");
+                        errors +=("El arreglo \" " + ctx.ID(0).getText() + " \" aún no ha sido inicializado.\n");
                 } catch (Exception e) {
-                    System.out.println("Error, no es la manera correcta para asignar a la variable.");
+                    errors +=("Error, no es la manera correcta para asignar a la variable.\n");
                 }
             } else if (!id.type.equals(exprType)) {
-                System.out.println("Los tipos son imcompatibles para la asignación entre: <" + id.type + "> y <" + exprType + ">.");
+                errors +=("Los tipos son imcompatibles para la asignación entre: <" + id.type + "> y <" + exprType + ">.\n");
             }
 
         } else if (id == null) {
-            System.out.println("\"" + ctx.ID(0).getText() + "\" no ha sido declarado!!! ");
+            errors +=("Error, \"" + ctx.ID(0).getText() + "\" no ha sido declarado.\n");
         }
 
         return null;
@@ -842,59 +826,59 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
                     if (exprType2 != null && exprType != null) {
                         if (exprType.equals("boolean") || exprType.equals("char") || exprType.equals("string") || exprType2.equals("string") || (exprType2.equals("boolean") || exprType2.equals("char"))) {
-                            System.out.println("Error, <" + exprType + "> y <" + exprType2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + operador + "\".");
+                            errors +=("Error, <" + exprType + "> y <" + exprType2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + operador + "\".\n");
                         } else if (!exprType2.equals(exprType)) {
-                            System.out.println("Error, <" + exprType + "> y <" + exprType2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + operador + "\".");
+                            errors +=("Error, <" + exprType + "> y <" + exprType2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + operador + "\".\n");
                         } else return "boolean";
 
                     } else if (exprType2 == null && exprType != null) {
                         if (!exprType.equals(id2.type)) {
-                            System.out.println("Error, <" + exprType + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".");
+                            errors +=("Error, <" + exprType + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".\n");
                         } else if (exprType.equals("boolean") || exprType.equals("char") || exprType.equals("string")) {
-                            System.out.println("Error, <" + exprType + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + operador + "\".");
+                            errors +=("Error, <" + exprType + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + operador + "\".\n");
                         } else return "boolean";
 
                     } else if (exprType2 != null) {
                         if (!exprType2.equals(id1.type)) {
-                            System.out.println("Error, <" + id1.type + "> y <" + exprType2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".");
+                            errors +=("Error, <" + id1.type + "> y <" + exprType2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".\n");
                         } else if (exprType2.equals("boolean") || exprType2.equals("char") || exprType2.equals("string")) {
-                            System.out.println("Error, <" + exprType2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + operador + "\".");
+                            errors +=("Error, <" + exprType2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + operador + "\".\n");
                         } else return "boolean";
 
                     } else {
                         if (id1.type.equals("char") || id1.type.equals("boolean") || id1.type.equals("string")) {
-                            System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".");
+                            errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".\n");
                         } else if (!id1.type.equals(id2.type)) {
-                            System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".");
+                            errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".\n");
                         } else return "boolean";
                     }
 
                 } else if (operador.equals("!=") || operador.equals("==")) {
                     if (exprType2 != null && exprType != null) {
                         if (!exprType2.equals(exprType)) {
-                            System.out.println("Error,<" + exprType2 + "> y <" + exprType + "> son tipos de datos incompatibles, sólo se permite datos de igual tipo.");
+                            errors +=("Error,<" + exprType2 + "> y <" + exprType + "> son tipos de datos incompatibles, sólo se permite datos de igual tipo.\n");
                         } else return "boolean";
 
                     } else if (exprType2 == null && exprType != null) {
                             if (!exprType.equals(id2.type)) {
-                            System.out.println("Error, <" + exprType + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".");
+                                errors +=("Error, <" + exprType + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".\n");
                         } else return "boolean";
 
                     } else if (exprType2 != null) {
                              if (!exprType2.equals(id1.type)) {
-                            System.out.println("Error, <" + id1.type + "> y <" + exprType2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".");
+                                 errors +=("Error, <" + id1.type + "> y <" + exprType2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".\n");
                         } else return "boolean";
 
                     } else {
                          if (!id1.type.equals(id2.type)) {
-                            System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".");
+                             errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + operador + "\".\n");
                         } else return "boolean";
                     }
 
                 }
 
             } catch (Exception e) {
-                System.out.println("Está operando con datos que no existen.");
+                errors +=("Error, está operando con datos que no existen.\n");
             }
         }
 
@@ -933,63 +917,63 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     case "||" -> {
                         if (simpleExpre2 != null && simpleExpre1 != null) {
                             if (simpleExpre1.equals("string") || simpleExpre1.equals("char") || (simpleExpre2.equals("string") || simpleExpre2.equals("char"))) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + aOperador + "\".\n");
                             } else if (!simpleExpre2.equals(simpleExpre1)) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + aOperador + "\".\n");
                             } else return "boolean";
 
                         } else if (simpleExpre2 == null && simpleExpre1 != null) {
                             if (!simpleExpre1.equals(id2.type)) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".\n");
                             } else if (simpleExpre1.equals("string") || simpleExpre1.equals("char")) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + aOperador + "\".\n");
                             } else return "boolean";
 
                         } else if (simpleExpre2 != null) {
                              if (!simpleExpre2.equals(id1.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".");
+                                 errors +=("Error, <" + id1.type + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".\n");
                             } else if (simpleExpre2.equals("string") || simpleExpre2.equals("char")) {
-                                System.out.println("Error, <" + simpleExpre2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + aOperador + "\".");
+                                 errors +=("Error, <" + simpleExpre2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + aOperador + "\".\n");
                             } else return "boolean";
 
                         } else {
                             if (id1.type.equals("char") || id1.type.equals("string")) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".\n");
                             } else if (!id1.type.equals(id2.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".\n");
                             } else return "boolean";
                         }
                     }
                     case "+" -> {
                         if (simpleExpre2 != null && simpleExpre1 != null) {
                             if (simpleExpre1.equals("boolean") || simpleExpre1.equals("char") || (simpleExpre2.equals("boolean") || simpleExpre2.equals("char"))) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o string) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o string) en el operador  \"" + aOperador + "\".\n");
                             } else if (!simpleExpre2.equals(simpleExpre1)) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o string) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o string) en el operador  \"" + aOperador + "\".\n");
                             } else if (simpleExpre1.equals("int")) return "int";
                             else return "string";
 
                         } else if (simpleExpre2 == null && simpleExpre1 != null) {
                              if (!simpleExpre1.equals(id2.type)) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o string) en el operador  \"" + aOperador + "\".");
+                                 errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o string) en el operador  \"" + aOperador + "\".\n");
                             } else if (simpleExpre1.equals("boolean") || simpleExpre1.equals("char")) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o string) en el operador  \"" + aOperador + "\".");
+                                 errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o string) en el operador  \"" + aOperador + "\".\n");
                             } else if (simpleExpre1.equals("int")) return "int";
                             else return "string";
 
                         } else if (simpleExpre2 != null) {
                              if (!simpleExpre2.equals(id1.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o string) en el operador  \"" + aOperador + "\".");
+                                 errors +=("Error, <" + id1.type + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o string) en el operador  \"" + aOperador + "\".\n");
                             } else if (simpleExpre2.equals("boolean") || simpleExpre2.equals("char")) {
-                                System.out.println("Error, <" + simpleExpre2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o string) en el operador  \"" + aOperador + "\".");
+                                 errors +=("Error, <" + simpleExpre2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o string) en el operador  \"" + aOperador + "\".\n");
                             } else if (simpleExpre2.equals("int")) return "int";
                             else return "string";
 
                         } else {
                             if (id1.type.equals("char") || id1.type.equals("boolean")) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o string) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o string) en el operador  \"" + aOperador + "\".\n");
                             } else if (!id1.type.equals(id2.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o string) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o string) en el operador  \"" + aOperador + "\".\n");
                             } else if (id1.type.equals("int")) return "int";
                             else return "string";
                         }
@@ -997,36 +981,36 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     case "-" -> {
                         if (simpleExpre2 != null && simpleExpre1 != null) {
                             if (simpleExpre1.equals("boolean") || simpleExpre1.equals("char") || simpleExpre1.equals("string") || simpleExpre2.equals("string") || (simpleExpre2.equals("boolean") || simpleExpre2.equals("char"))) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + aOperador + "\".\n");
                             } else if (!simpleExpre2.equals(simpleExpre1)) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + aOperador + "\".\n");
                             } else return "int";
 
                         } else if (simpleExpre2 == null && simpleExpre1 != null) {
                             if (!simpleExpre1.equals(id2.type)) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + aOperador + "\".\n");
                             } else if (simpleExpre1.equals("boolean") || simpleExpre1.equals("char") || simpleExpre1.equals("string")) {
-                                System.out.println("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + aOperador + "\".\n");
                             } else return "int";
 
                         } else if (simpleExpre2 != null) {
                             if (!simpleExpre2.equals(id1.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + aOperador + "\".\n");
                             } else if (simpleExpre2.equals("boolean") || simpleExpre2.equals("char") || simpleExpre2.equals("string")) {
-                                System.out.println("Error, <" + simpleExpre2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + simpleExpre2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + aOperador + "\".\n");
                             } else return "int";
 
                         } else {
                             if (id1.type.equals("char") || id1.type.equals("boolean") || id1.type.equals("string")) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + aOperador + "\".\n");
                             } else if (!id1.type.equals(id2.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + aOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + aOperador + "\".\n");
                             } else return "int";
                         }
                     }
                 }
             }catch (Exception e){
-                    System.out.println("Está operando con datos no validos!");
+                errors +=("Error operando con datos no validos!\n");
             }
 
         }
@@ -1060,30 +1044,30 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     case "/":
                         if (factor2 != null && factor1 != null) {
                             if (factor1.equals("boolean") || factor1.equals("char") || factor1.equals("string") || factor2.equals("string") || (factor2.equals("boolean") || factor2.equals("char"))) {
-                                System.out.println("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + mOperador + "\".\n");
                             } else if (!factor2.equals(factor1)) {
-                                System.out.println("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int) en el operador  \"" + mOperador + "\".\n");
                             } else return "int";
 
                         } else if (factor2 == null && factor1 != null) {
                             if (!factor1.equals(id2.type)) {
-                                System.out.println("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + mOperador + "\".\n");
                             } else if (factor1.equals("boolean") || factor1.equals("char") || factor1.equals("string")) {
-                                System.out.println("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + mOperador + "\".\n");
                             } else return "int";
 
                         } else if (factor2 != null) {
                             if (!factor2.equals(id1.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + mOperador + "\".\n");
                             } else if (factor2.equals("boolean") || factor2.equals("char") || factor2.equals("string")) {
-                                System.out.println("Error, <" + factor2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int) en el operador  \"" + mOperador + "\".\n");
                             } else return "int";
 
                         } else {
                             if (id1.type.equals("char") || id1.type.equals("boolean") || id1.type.equals("string")) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + mOperador + "\".\n");
                             } else if (!id1.type.equals(id2.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int) en el operador  \"" + mOperador + "\".\n");
                             } else return "int";
                         }
 
@@ -1092,30 +1076,30 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     case "&&":
                         if (factor2 != null && factor1 != null) {
                             if (factor1.equals("string") || factor1.equals("char") || (factor2.equals("string") || factor2.equals("char"))) {
-                                System.out.println("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + mOperador + "\".\n");
                             } else if (!factor2.equals(factor1)) {
-                                System.out.println("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + mOperador + "\".\n");
                             } else return "boolean";
 
                         } else if (factor2 == null && factor1 != null) {
                             if (!factor1.equals(id2.type)) {
-                                System.out.println("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".\n");
                             } else if (factor1.equals("string") || factor1.equals("char")) {
-                                System.out.println("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + mOperador + "\".\n");
                             } else return "boolean";
 
                         } else if (factor2 != null) {
                             if (!factor2.equals(id1.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".\n");
                             } else if (factor2.equals("string") || factor2.equals("char")) {
-                                System.out.println("Error, <" + factor2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + factor2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + mOperador + "\".\n");
                             } else return "boolean";
 
                         } else {
                             if (id1.type.equals("char") || id1.type.equals("string")) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".\n");
                             } else if (!id1.type.equals(id2.type)) {
-                                System.out.println("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".\n");
                             } else return "boolean";
                         }
                         break;
@@ -1123,7 +1107,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
             }catch (Exception e){
 
-                    System.out.println("Está operando con datos no validos.");
+                errors +=("Error, está operando con datos no validos.\n");
             }
 
         }
@@ -1140,7 +1124,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitPuntIdFactAST(miParser.PuntIdFactASTContext ctx) {
-        //System.out.println("FACTOR ID PUNTO ID")
         return null;
     }
 
@@ -1210,7 +1193,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
         Ident id = null;
         if(attr != null){
             if (!((String) attr).equals("int")){
-                System.out.println("La inicialización de los arreglos deben de ser siempre de tipo int y se esta usando  tipo \""+attr+"\"");
+                errors +=("Error, la inicialización de los arreglos deben de ser siempre de tipo int y se esta usando  tipo \""+attr+"\"\n");
             }
         }else if (ctx.expression().getText().contains(".")) {
             Ident idExp2 = tabla.buscar(ctx.expression().getText());
@@ -1228,29 +1211,29 @@ public class AnalisisContextual extends miParserBaseVisitor {
                             //Valido que exista esa varible
                             if (idExist.type.equals("int")) { //Valido que lo que se va a asignar sean iguales
                                 if (!idExist.initialited) {//Valido que este inicializada
-                                    System.out.println("Error, <" + idExist.tok.getText() + "> no a sido inicializada.");
+                                    errors +=("Error, <" + idExist.tok.getText() + "> no a sido inicializada.\n");
                                     arrTyp = null;
                                 }else {
                                     arrTyp = ctx.expression().getText();
                                 }
 
                             } else
-                                System.out.println("Error, esta tratando de inicializar el array con un tipo <"+ idExist.type +">.");
-                        } else System.out.println("Error, el dato que quiere asignar al tamaño del array no existe.");
-                    } else System.out.println("Error, no se encuentra <" + point2 + "> en < " + point1 + " >.");
-                } else System.out.println("Error, <" + point1 + "> no a sido inicializado.");
-            } else System.out.println("Error, está asignando al array de tipo <" + ctx.stype().getText() + "> un dato invalido.");
+                                errors +=("Error, esta tratando de inicializar el array con un tipo <"+ idExist.type +">.\n");
+                        } else errors +=("Error, el dato que quiere asignar al tamaño del array no existe.\n");
+                    } else errors +=("Error, no se encuentra <" + point2 + "> en < " + point1 + " >.\n");
+                } else errors +=("Error, <" + point1 + "> no a sido inicializado.\n");
+            } else errors +=("Error, está asignando al array de tipo <" + ctx.stype().getText() + "> un dato invalido.\n");
 
         } else{
             id = tabla.buscar(ctx.expression().getText());
             if(id != null) {
                 if (!id.type.equals("int")) {
-                    System.out.println("El index ingresado no es un dato valido, debe ser tipo int.");
+                    errors +=("El index ingresado no es un dato valido, debe ser tipo int.\n");
                 }else {
                     return id.type;
                 }
             }else {
-                System.out.println("Debe ingresar un index valido para el arreglo.");
+                errors +=("Debe ingresar un index valido para el arreglo.\n");
             }
         }
 
@@ -1267,7 +1250,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
         Ident id = tabla.buscar(ctx.ID().getText());
         if (id == null){
-            System.out.println("Error <"+ctx.ID().getText()+"> No no ha sido declarado!!!");
+            errors +=("Error, <"+ctx.ID().getText()+"> No no ha sido declarado!!!\n");
         }else{
             Object test = ctx.actualParams();
             if (test != null){
@@ -1275,19 +1258,19 @@ public class AnalisisContextual extends miParserBaseVisitor {
                 Object test2 = (( ((miParser.FunctionDeclASTContext) id.declCtx).formalParams()));
                 if (test2 != null){
                     if (ctx.actualParams().cantParams != ( ((miParser.FunctionDeclASTContext) id.declCtx).formalParams()).cantParams){
-                        System.out.println("Error en la llamada del método, cantidad de parámetros diferente a la declaración");
+                        errors +=("Error en la llamada del método, cantidad de parámetros diferente a la declaración\n");
                         return id.type;
                     }
                 }else{
                     if (ctx.actualParams().cantParams > 0){
-                        System.out.println("Error en la llamada del método, cantidad de parámetros diferente a la declaración");
+                        errors +=("Error en la llamada del método, cantidad de parámetros diferente a la declaración\n");
                         return id.type;
                     }
                 }
             }else{
                 try {
                     if ((((miParser.FunctionDeclASTContext) id.declCtx).formalParams()).cantParams > 0){
-                        System.out.println("Error en la llamada del método, cantidad de parámetros diferente a la declaración");
+                        errors +=("Error en la llamada del método, cantidad de parámetros diferente a la declaración\n");
                         return id.type;
                     }
                 }catch (Exception ignored){
@@ -1298,7 +1281,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
             for (int i = 0; i < id.listParams.size(); i++) {
 
                 if(!types.get(i).equals(id.listParams.get(i).type))
-                    System.out.println("Error, el parametro es tipo <"+id.listParams.get(i).type+"> y está ingresando un tipo <"+types.get(i)+">.");
+                    errors +=("Error, el parametro es tipo <"+id.listParams.get(i).type+"> y está ingresando un tipo <"+types.get(i)+">.\n");
 
 
             }
