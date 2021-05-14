@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class AnalisisContextual extends miParserBaseVisitor {
+    
     private TablaSimbolos tabla;
     private TablaSimbolClass tablaClass;
     private List<String> classes = new ArrayList<String>();
@@ -19,8 +20,9 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
    public AnalisisContextual() {
 
-       tabla = new TablaSimbolos();
-       tablaClass = new TablaSimbolClass();
+       tabla = TablaSimbolos.getInstance();
+       tablaClass = new TablaSimbolClass(); // Falta hacer este singletone
+
    }
 
     @Override
