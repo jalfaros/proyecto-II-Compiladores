@@ -303,12 +303,14 @@ public class AnalisisContextual extends miParserBaseVisitor {
         if(expr == null ){
             errors +=("Error, el operador en el \"if\" es invalido.\n");
         }
+
         this.visit(ctx.block(0));
 
         if(ctx.block(1) !=  null){
 
             this.visit(ctx.block(1));
         }
+        tabla.imprimir();
 
 
         return null;
