@@ -1,8 +1,13 @@
 
 
-if(5 < 3){
+int x;
 
-int p = 5;
-}
+int h = 18;
 
+string a = "warner y ";
 
+boolean n = true;
+boolean f = true;
+boolean j = false;
+
+print((x<5) && (f));

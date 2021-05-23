@@ -6,7 +6,7 @@
         <PerGrammarGenerationSettings>
           <option name="fileName" value="$PROJECT_DIR$/miParser.g4" />
           <option name="autoGen" value="true" />
-          <option name="outputDir" value="C:\Users\warne\Desktop\proyecto-II-Compiladores\src" />
+          <option name="outputDir" value="C:\Users\warne\Desktop\proyecto-III-Compiladores\src" />
           <option name="libDir" value="" />
           <option name="encoding" value="" />
           <option name="pkg" value="generated" />
@@ -17,7 +17,7 @@
         <PerGrammarGenerationSettings>
           <option name="fileName" value="$PROJECT_DIR$/miScanner.g4" />
           <option name="autoGen" value="true" />
-          <option name="outputDir" value="C:\Users\warne\Desktop\proyecto-II-Compiladores\src" />
+          <option name="outputDir" value="C:\Users\warne\Desktop\proyecto-III-Compiladores\src" />
           <option name="libDir" value="" />
           <option name="encoding" value="" />
           <option name="pkg" value="generated" />

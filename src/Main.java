@@ -1,5 +1,7 @@
 import analysisContext.AnalisisContextual;
 import generated.*;
+import interprete.Almacen;
+import interprete.Interprete;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
@@ -26,10 +28,21 @@ public class Main {
             tree = parser.program();
             //PrettyPrintAST pp = new PrettyPrintAST();
             AnalisisContextual ac = new AnalisisContextual();
+            Interprete inter = new Interprete();
+
             ac.visit(tree);
+            if (ac.errors  == (null)){
+                System.out.println("\nCompilación sin errores!");
+
+                //Solo si no hay errores que me haga el interprete
+                inter.visit(tree);
+
+            }else {
+                System.out.println(ac.errors.replace("null",""));
+
+            }
 
             //ac.visit(tree);
-
             //MiParserMANUAL parse2 = new MiParserMANUAL(inst);
             //parse2.parseProgram();
             System.out.println("Compilación Terminada!!\n");
