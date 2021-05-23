@@ -6,14 +6,23 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class TablaSimbolos {
+
+    private static TablaSimbolos inst = null;
+
     LinkedList<Object> tabla;
+    public int nivelActual = 0;
 
-    public int nivelActual;
 
-
-    public TablaSimbolos(){
+    private TablaSimbolos(){
         tabla = new LinkedList<Object>();
-        this.nivelActual = -1;
+        //this.nivelActual = -1;
+    }
+
+    public static TablaSimbolos getInstance(){
+        if( inst == null ){
+            inst = new TablaSimbolos();
+        }
+        return inst;
     }
 
     public void insertar(Token id, String tipo, ParserRuleContext decl){

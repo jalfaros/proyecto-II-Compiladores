@@ -1,5 +1,13 @@
 
 
+int x;
 
+int h = 18;
 
+string a = "warner y ";
 
+boolean n = true;
+boolean f = true;
+boolean j = false;
+
+print((x<5) && (f));

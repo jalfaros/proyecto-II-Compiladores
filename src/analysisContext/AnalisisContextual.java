@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class AnalisisContextual extends miParserBaseVisitor {
+    
     private TablaSimbolos tabla;
     private TablaSimbolClass tablaClass;
     private List<String> classes = new ArrayList<String>();
@@ -19,8 +20,9 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
    public AnalisisContextual() {
 
-       tabla = new TablaSimbolos();
-       tablaClass = new TablaSimbolClass();
+       tabla = TablaSimbolos.getInstance();
+       tablaClass = new TablaSimbolClass(); // Falta hacer este singletone
+
    }
 
     @Override
@@ -37,7 +39,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
                 return "boolean";
             default:
                 errors +=(ctx.getText() + " no es un tipo de dato válido\n");
-                errors += (ctx.getText() + " no es un tipo de dato válido\n");
                 return null;
         }
     }
@@ -49,7 +50,8 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitIntLiteralAST(miParser.IntLiteralASTContext ctx) {
-        return "int";
+
+       return "int";
     }
 
 
@@ -74,6 +76,8 @@ public class AnalisisContextual extends miParserBaseVisitor {
         for (int i = 0; i < ctx.statement().size(); i++) {
             this.visit(ctx.statement(i));
         }
+        tabla.imprimir();
+        tablaClass.imprimir();
 
         return null;
     }
@@ -235,16 +239,21 @@ public class AnalisisContextual extends miParserBaseVisitor {
     @Override
     public Object visitFunctionDeclAST(miParser.FunctionDeclASTContext ctx) {
 
-        //List<Ident.Params>
         Object id = null;
 
         if(ctx.type() != null){
             id = this.visit(ctx.type());
 
             if (id.equals("int") || id.equals("boolean") || id.equals("char") || id.equals("string")){
-                tabla.agregarParams(ctx.ID().getSymbol(), (String) id, ctx, param);
                 Ident t = tabla.buscar(ctx.ID().getText());
-                t.initialited = true;
+                if (t == null){
+                    tabla.agregarParams(ctx.ID().getSymbol(), (String) id, ctx, param);
+                    t = tabla.buscar(ctx.ID().getText());
+                    t.initialited = true;
+                }else{
+                    errors += ("Error, la función que desea declarar ya existe;");
+                }
+
             }else{
                 errors +=("Error, no se permite este tipo de dato en las funciones.\n");
             }
@@ -301,12 +310,14 @@ public class AnalisisContextual extends miParserBaseVisitor {
         if(expr == null ){
             errors +=("Error, el operador en el \"if\" es invalido.\n");
         }
+
         this.visit(ctx.block(0));
 
         if(ctx.block(1) !=  null){
 
             this.visit(ctx.block(1));
         }
+        tabla.imprimir();
 
 
         return null;
@@ -423,7 +434,9 @@ public class AnalisisContextual extends miParserBaseVisitor {
         }
 
         //VALIDANDO SOLO LA DECLARACION
-        if (ctx.ASSIGN() == null && idExist == null){
+       // if (ctx.ASSIGN() == null && idExist == null){ ASI ES A COMO ESTABA ANTES, HACIENDO PRUEBAS
+        if (ctx.ASSIGN() == null){
+
             if(ctx.type().getText().equals("boolean[]") || ctx.type().getText().equals("char[]") || ctx.type().getText().equals("int[]") || ctx.type().getText().equals("string[]")){
                 Ident id = tabla.buscar(ctx.ID().getText());
                 if (id != null)
@@ -448,7 +461,8 @@ public class AnalisisContextual extends miParserBaseVisitor {
             }else errors +=("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.\n");
 
         //VALIDANDO DECLARACION Y ASIGNACION
-        }else if(ctx.ASSIGN() != null && idExist == null){
+            //}else if(ctx.ASSIGN() != null && idExist == null){ ASI ES A COMO ESTABA ANTES
+        }else if(ctx.ASSIGN() != null){
             //VALIDANDO ARRAYS
             if(ctx.type().getText().equals("boolean[]") || ctx.type().getText().equals("char[]") || ctx.type().getText().equals("int[]") || ctx.type().getText().equals("string[]")){
                 if (this.visit(ctx.expression()) != null){
@@ -589,7 +603,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
             }else errors +=("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.\n");
 
         }else if (ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string")) {
-
+            System.out.println(ctx.expression().getText() + " probando");
             if (ctx.type().getText().equals(this.visit(ctx.expression()))){
                 Ident id = tabla.buscar(ctx.expression().getText());
                 if(id != null) {
@@ -916,31 +930,29 @@ public class AnalisisContextual extends miParserBaseVisitor {
                 switch (aOperador) {
                     case "||" -> {
                         if (simpleExpre2 != null && simpleExpre1 != null) {
-                            if (simpleExpre1.equals("string") || simpleExpre1.equals("char") || (simpleExpre2.equals("string") || simpleExpre2.equals("char"))) {
-                                errors +=("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + aOperador + "\".\n");
-                            } else if (!simpleExpre2.equals(simpleExpre1)) {
-                                errors +=("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + aOperador + "\".\n");
+                            if (!simpleExpre1.equals("boolean") || !simpleExpre2.equals("boolean")) {
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos (boolean) en el operador  \"" + aOperador + "\".\n");
                             } else return "boolean";
 
                         } else if (simpleExpre2 == null && simpleExpre1 != null) {
                             if (!simpleExpre1.equals(id2.type)) {
-                                errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".\n");
-                            } else if (simpleExpre1.equals("string") || simpleExpre1.equals("char")) {
-                                errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + aOperador + "\".\n");
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (boolean) en el operador  \"" + aOperador + "\".\n");
+                            } else if (!simpleExpre1.equals("boolean")) {
+                                errors +=("Error, <" + simpleExpre1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (boolean) en el operador  \"" + aOperador + "\".\n");
                             } else return "boolean";
 
                         } else if (simpleExpre2 != null) {
                              if (!simpleExpre2.equals(id1.type)) {
-                                 errors +=("Error, <" + id1.type + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".\n");
-                            } else if (simpleExpre2.equals("string") || simpleExpre2.equals("char")) {
-                                 errors +=("Error, <" + simpleExpre2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + aOperador + "\".\n");
+                                 errors +=("Error, <" + id1.type + "> y <" + simpleExpre2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (boolean) en el operador  \"" + aOperador + "\".\n");
+                            } else if (!simpleExpre2.equals("boolean")) {
+                                 errors +=("Error, <" + simpleExpre2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (boolean) en el operador  \"" + aOperador + "\".\n");
                             } else return "boolean";
 
                         } else {
-                            if (id1.type.equals("char") || id1.type.equals("string")) {
-                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".\n");
+                            if (!id1.type.equals("boolean")) {
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (boolean) en el operador  \"" + aOperador + "\".\n");
                             } else if (!id1.type.equals(id2.type)) {
-                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + aOperador + "\".\n");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (boolean) en el operador  \"" + aOperador + "\".\n");
                             } else return "boolean";
                         }
                     }
@@ -1075,31 +1087,31 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
                     case "&&":
                         if (factor2 != null && factor1 != null) {
-                            if (factor1.equals("string") || factor1.equals("char") || (factor2.equals("string") || factor2.equals("char"))) {
-                                errors +=("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + mOperador + "\".\n");
+                            if (factor1.equals("string") || factor1.equals("char") || (factor2.equals("string") || factor2.equals("char")  || factor2.equals("int"))) {
+                                errors +=("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (boolean) en el operador  \"" + mOperador + "\".\n");
                             } else if (!factor2.equals(factor1)) {
-                                errors +=("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (int o boolean) en el operador  \"" + mOperador + "\".\n");
+                                errors +=("Error, <" + factor1 + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos (boolean) en el operador  \"" + mOperador + "\".\n");
                             } else return "boolean";
 
                         } else if (factor2 == null && factor1 != null) {
                             if (!factor1.equals(id2.type)) {
-                                errors +=("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".\n");
-                            } else if (factor1.equals("string") || factor1.equals("char")) {
-                                errors +=("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + mOperador + "\".\n");
+                                errors +=("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (boolean) en el operador  \"" + mOperador + "\".\n");
+                            } else if (!factor1.equals("boolean")) {
+                                errors +=("Error, <" + factor1 + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (boolean) en el operador  \"" + mOperador + "\".\n");
                             } else return "boolean";
 
                         } else if (factor2 != null) {
                             if (!factor2.equals(id1.type)) {
-                                errors +=("Error, <" + id1.type + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".\n");
-                            } else if (factor2.equals("string") || factor2.equals("char")) {
-                                errors +=("Error, <" + factor2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (int o boolean) en el operador  \"" + mOperador + "\".\n");
+                                errors +=("Error, <" + id1.type + "> y <" + factor2 + "> son  incompatibles, sólo se permiten tipos iguales y que sean (boolean) en el operador  \"" + mOperador + "\".\n");
+                            } else if (!factor2.equals("boolean")) {
+                                errors +=("Error, <" + factor2 + "> y <" + id1.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean tipo (boolean) en el operador  \"" + mOperador + "\".\n");
                             } else return "boolean";
 
                         } else {
-                            if (id1.type.equals("char") || id1.type.equals("string")) {
-                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".\n");
+                            if (!id1.type.equals("boolean")) {
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (boolean) en el operador  \"" + mOperador + "\".\n");
                             } else if (!id1.type.equals(id2.type)) {
-                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (int o boolean) en el operador  \"" + mOperador + "\".\n");
+                                errors +=("Error, <" + id1.type + "> y <" + id2.type + "> son  incompatibles, sólo se permiten tipos iguales y que sean (boolean) en el operador  \"" + mOperador + "\".\n");
                             } else return "boolean";
                         }
                         break;
