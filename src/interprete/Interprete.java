@@ -124,9 +124,7 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitVariableDeclAST(miParser.VariableDeclASTContext ctx) {
-
         String tipo = (String) visit(ctx.type());
-
         if(ctx.ASSIGN() == null){
             switch (tipo) {
                 case "int" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), 0);
@@ -137,6 +135,8 @@ public class Interprete extends miParserBaseVisitor {
         }else {
             if(tipo.equals("int") || tipo.equals("char") || tipo.equals("string") || tipo.equals("boolean")){
                 this.almacenDatos.agregarInstancia(ctx.ID().getText(), this.visit(ctx.expression()));
+            }else if(tipo.equals("int[]") || tipo.equals("char[]") || tipo.equals("string[]") || tipo.equals("boolean[]")){
+                this.almacenDatos.agregarInstancia(ctx.ID().getText(),(Integer) this.visit(ctx.expression()), 0);
             }
         }
         return super.visitVariableDeclAST(ctx);
@@ -149,7 +149,7 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitArrtypeTypeAST(miParser.ArrtypeTypeASTContext ctx) {
-        return super.visitArrtypeTypeAST(ctx);
+        return this.visit(ctx.arrayType());
     }
 
     @Override
@@ -164,12 +164,11 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitArrTypeAST(miParser.ArrTypeASTContext ctx) {
-        return super.visitArrTypeAST(ctx);
+        return ctx.getText();
     }
 
     @Override
     public Object visitAsssignAST(miParser.AsssignASTContext ctx) {
-
         if(ctx.PUNTO() == null) {
             String nombre = ctx.ID(0).getText();
             Object valor = this.visit(ctx.expression());
@@ -180,6 +179,10 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitArrAssignAST(miParser.ArrAssignASTContext ctx) {
+        String nombre = ctx.ID().getText();
+        int index = (Integer) this.visit(ctx.expression(0));
+        Object valor = this.visit(ctx.expression(1));
+        almacenDatos.setValuArr(nombre,index,valor);
         return super.visitArrAssignAST(ctx);
     }
 
@@ -230,7 +233,13 @@ public class Interprete extends miParserBaseVisitor {
             try{
                 return (Integer) v1 + (Integer) v2;
             }catch (Exception e) {
-                return v1 + (String) v2;
+
+                try {
+                    return v1 + (String) v2;
+                }catch (Exception err){
+                    System.out.println("Error, el array en ese index no ha sido asignado.");
+                }
+
             }
 
         }
@@ -275,7 +284,6 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitPuntIdFactAST(miParser.PuntIdFactASTContext ctx) {
-
         return almacenDatos.getInstancia(ctx.ID(0).getText());
     }
 
@@ -286,7 +294,7 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitArrayLokupFactAST(miParser.ArrayLokupFactASTContext ctx) {
-        return super.visitArrayLokupFactAST(ctx);
+        return this.visit(ctx.arrayLookup());
     }
 
     @Override
@@ -301,7 +309,7 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitArrayAlloExpreFactAST(miParser.ArrayAlloExpreFactASTContext ctx) {
-        return super.visitArrayAlloExpreFactAST(ctx);
+        return this.visit(ctx.arrayAllocationExpression());
     }
 
     @Override
@@ -326,7 +334,7 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitArrAllocationExprAST(miParser.ArrAllocationExprASTContext ctx) {
-        return super.visitArrAllocationExprAST(ctx);
+        return this.visit(ctx.expression());
     }
 
     @Override
@@ -346,7 +354,7 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitArrLookupAST(miParser.ArrLookupASTContext ctx) {
-        return super.visitArrLookupAST(ctx);
+        return almacenDatos.getValueArr(ctx.ID().getText(), (Integer) this.visit(ctx.expression()));
     }
 
     @Override

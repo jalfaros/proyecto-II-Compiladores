@@ -1,13 +1,11 @@
 
 
-int x;
-
 int h = 18;
+int x;
+x = 2;
+int[] n = new int[h];
 
-string a = "warner y ";
+n[6] = x;
+n[x] = 5;
 
-boolean n = true;
-boolean f = true;
-boolean j = false;
-
-print((x<5) && (f));
+print(n[6] + 3);
