@@ -1,11 +1,12 @@
 
 
-int h = 18;
-int x;
-x = 2;
-int[] n = new int[h];
 
-n[6] = x;
-n[x] = 5;
 
-print(n[6] + 3);
+int imprimir(char letra, int cant){
+    int r = cant + 2;
+    print(r);
+};
+
+print imprimir('4', 5);
+
+

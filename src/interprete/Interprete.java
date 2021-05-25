@@ -77,17 +77,25 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitFunctionDeclAST(miParser.FunctionDeclASTContext ctx) {
-        return super.visitFunctionDeclAST(ctx);
+
+        almacenDatos.agregarInstancia(ctx.ID().getText(), null, ctx);
+        return null;
     }
 
     @Override
     public Object visitFParamsAST(miParser.FParamsASTContext ctx) {
-        return super.visitFParamsAST(ctx);
+
+        for(miParser.FormalParamContext p: ctx.formalParam()){
+            almacenDatos.agregarInstancia((String) this.visit(p), pilaExpresiones.pop());
+
+        }
+
+        return null;
     }
 
     @Override
     public Object visitFParamAST(miParser.FParamASTContext ctx) {
-        return super.visitFParamAST(ctx);
+        return ctx.ID().getText();
     }
 
     @Override
@@ -108,7 +116,7 @@ public class Interprete extends miParserBaseVisitor {
     @Override
     public Object visitPrintStmntAST(miParser.PrintStmntASTContext ctx) {
         System.out.println(this.visit(ctx.expression()) + " <-- Imprimiendo el valor de "+ ctx.expression().getText());
-        return super.visitPrintStmntAST(ctx);
+        return null;
     }
 
     @Override
@@ -284,12 +292,14 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitPuntIdFactAST(miParser.PuntIdFactASTContext ctx) {
-        return almacenDatos.getInstancia(ctx.ID(0).getText());
+        return (almacenDatos.getInstancia(ctx.ID(0).getText())).valor;
     }
 
     @Override
     public Object visitFuntionCallFactAST(miParser.FuntionCallFactASTContext ctx) {
-        return super.visitFuntionCallFactAST(ctx);
+
+        return visit(ctx.funtionCall());
+
     }
 
     @Override
@@ -344,12 +354,28 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitFunctionCallAST(miParser.FunctionCallASTContext ctx) {
-        return super.visitFunctionCallAST(ctx);
+        Object result = null;
+        //Busco el metodo
+        Almacen.Instancia i = almacenDatos.getInstancia(ctx.ID().getText());
+
+        //Lidiar con los parámetros - guardo los valores de los parametros en la pila
+        this.visit(ctx.actualParams());
+
+        //Uno los parametros con sus valores y los guardo en el almacen
+        visit(((miParser.FunctionDeclASTContext)i.ctx).formalParams());
+
+        //Visitar el cuerpo del método
+        result = visit(((miParser.FunctionDeclASTContext)i.ctx).block());
+
+        return result ;
     }
 
     @Override
     public Object visitActualParamsAST(miParser.ActualParamsASTContext ctx) {
-        return super.visitActualParamsAST(ctx);
+        for (int i = ctx.expression().size()-1; i >= 0 ; i--) {
+            pilaExpresiones.push(this.visit(ctx.expression(i)));
+        }
+        return null;
     }
 
     @Override

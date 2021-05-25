@@ -1,6 +1,7 @@
 package interprete;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.stringtemplate.v4.ST;
 
 import java.util.LinkedList;
 
@@ -17,21 +18,21 @@ public class Almacen {
             this.nombre = nombre;
             this.valor = valor;
             this.ctx = null;
-            arr = null;
+            this.arr = null;
         }
 
         public Instancia(String nombre, int size, Object valor) {
             this.nombre = nombre;
             this.valor = null;
             this.ctx = null;
-            arr = new Object[size];
+            this.arr = new Object[size];
         }
 
         public Instancia(String nombre, Object valor, ParserRuleContext ctx) {
             this.nombre = nombre;
             this.valor = valor;
             this.ctx = ctx;
-            arr = null;
+            this.arr = null;
         }
     }
 
@@ -52,10 +53,10 @@ public class Almacen {
     }
 
     //Esto es como un buscar
-    public Object getInstancia(String nombr){
-        for(Object id: tablaAlmacen)
-            if (((Instancia)id).nombre.equals(nombr))
-                return (((Instancia)id).valor);
+    public Instancia getInstancia(String nombr){
+        for(Instancia id: tablaAlmacen)
+            if (id.nombre.equals(nombr))
+                return id;
         return null;
     }
 

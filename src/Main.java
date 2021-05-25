@@ -31,6 +31,7 @@ public class Main {
             Interprete inter = new Interprete();
 
             ac.visit(tree);
+            inter.visit(tree);
             if (ac.errors  == (null)){
                 System.out.println("\nCompilación sin errores!");
 
