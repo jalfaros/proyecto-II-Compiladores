@@ -1,12 +1,15 @@
 
-
+int t = 5;
 
 
 int imprimir(char letra, int cant){
-    int r = cant + 2;
-    print(r);
+    cant = cant + cant;
+
+    int t = 0;
+    print(cant);
+    return cant;
 };
 
-print imprimir('4', 5);
+print imprimir('4', 5) + 2;
 
 

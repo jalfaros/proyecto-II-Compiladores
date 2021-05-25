@@ -110,7 +110,8 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitReturnStmntAST(miParser.ReturnStmntASTContext ctx) {
-        return super.visitReturnStmntAST(ctx);
+        pilaExpresiones.push(this.visit(ctx.expression()));
+        return null;
     }
 
     @Override
@@ -365,9 +366,9 @@ public class Interprete extends miParserBaseVisitor {
         visit(((miParser.FunctionDeclASTContext)i.ctx).formalParams());
 
         //Visitar el cuerpo del método
-        result = visit(((miParser.FunctionDeclASTContext)i.ctx).block());
+        visit(((miParser.FunctionDeclASTContext)i.ctx).block());
 
-        return result ;
+        return pilaExpresiones.pop() ;
     }
 
     @Override
