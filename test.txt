@@ -4,12 +4,11 @@ int[] pepito;
 int test(int h, int k){
     return 3;
 };
+int cant;
 
 pepito = new int[5];
 
-pepito[3] = 7;
-
-print pepito[3];
+pepito[4] = 7;
 
 int imprimir(char letra, int cant){
     cant = cant + cant;
@@ -18,8 +17,12 @@ int imprimir(char letra, int cant){
     print(cant);
     return t;
 };
-
-print imprimir('d',3);
+pepito[2] = pepito[4];
 print  test(5, 5);
+print imprimir('d',5) + pepito[4]+2;
+string elString = "pepito";
+print(elString.length);
+
+
 
 

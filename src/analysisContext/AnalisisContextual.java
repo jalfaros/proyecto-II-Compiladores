@@ -1364,17 +1364,18 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
         Ident id = tabla.buscar(ctx.ID().getText());
         if (id != null){
-            if((id.type.substring(id.type.length()-2, id.type.length())).equals("[]")){
+            if((id.type.contains("[]"))){
                 return "int";
             }else if(id.type.equals("string")){
                 return "int";
             }
         }
         if(id == null){
-            return " \""+ ctx.ID().getText() +"\" no existe. ";
+            errors += "Error, \""+ ctx.ID().getText() +"\" no existe. \n";
+            return null;
         }
-
-        return  " "+ctx.ID().getText() +" no se le puede hacer un length.";
+        errors += "Error, a "+ctx.ID().getText() +" no se le puede hacer un length. \n";
+        return null;
     }
 
 }

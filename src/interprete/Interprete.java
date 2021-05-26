@@ -142,14 +142,14 @@ public class Interprete extends miParserBaseVisitor {
                 case "string" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), "");
                 case "boolean" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), false);
                 //Agrego por defecto un array que no tiene instancia
-                default -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), 0, 0);
+                default -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), new Object[0]);
             }
         }else {
             if(tipo.equals("int") || tipo.equals("char") || tipo.equals("string") || tipo.equals("boolean")){
                 this.almacenDatos.agregarInstancia(ctx.ID().getText(), this.visit(ctx.expression()));
             }else if(tipo.equals("int[]") || tipo.equals("char[]") || tipo.equals("string[]") || tipo.equals("boolean[]")){
 
-                this.almacenDatos.agregarInstancia(ctx.ID().getText(),(Integer) this.visit(ctx.expression()), 0);
+                this.almacenDatos.agregarInstancia(ctx.ID().getText(),new Object[(Integer) this.visit(ctx.expression())]);
             }
         }
         return super.visitVariableDeclAST(ctx);
@@ -185,7 +185,7 @@ public class Interprete extends miParserBaseVisitor {
         if(ctx.PUNTO() == null) {
             //Guardo el nuevo valor que tendrá el array
             if(ctx.expression().getText().contains("new")){
-                almacenDatos.seInsArr(ctx.ID(0).getText(), (Integer) this.visit(ctx.expression()));
+                almacenDatos.setInstancia(ctx.ID(0).getText(), new Object[(Integer) this.visit(ctx.expression())]);
             }else {
                 String nombre = ctx.ID(0).getText();
                 Object valor = this.visit(ctx.expression());
@@ -200,7 +200,10 @@ public class Interprete extends miParserBaseVisitor {
         String nombre = ctx.ID().getText();
         int index = (Integer) this.visit(ctx.expression(0));
         Object valor = this.visit(ctx.expression(1));
-        almacenDatos.setValuArr(nombre,index,valor);
+
+        Object[] value = (Object[]) almacenDatos.getInstancia(ctx.ID().getText()).valor;
+        value[index] = valor;
+        almacenDatos.setInstancia(nombre, value);
         return super.visitArrAssignAST(ctx);
     }
 
@@ -393,18 +396,30 @@ public class Interprete extends miParserBaseVisitor {
     @Override
     public Object visitArrLookupAST(miParser.ArrLookupASTContext ctx) {
 
-        Object value = almacenDatos.getValueArr(ctx.ID().getText(), (Integer) this.visit(ctx.expression()));
+        Object[] value = (Object[]) almacenDatos.getInstancia(ctx.ID().getText()).valor;
 
         if (value == null){
             System.out.println("Error, el array en ese index aún no ha sido asignado!.");
         }
 
-        return value;
+        try {
+            assert value != null;
+            return value[(Integer) this.visit(ctx.expression())];
+        }catch (Exception e){
+            System.out.println("Error, el index "+this.visit(ctx.expression())+" está fuera del rango del array.");
+            return null;
+        }
     }
 
     @Override
     public Object visitArrLengthAST(miParser.ArrLengthASTContext ctx) {
-        return super.visitArrLengthAST(ctx);
+        try {
+            Object[] v = (Object[]) almacenDatos.getInstancia(ctx.ID().getText()).valor;
+            return v.length;
+        }catch (Exception e){
+            String v = (String) almacenDatos.getInstancia(ctx.ID().getText()).valor;
+            return v.length();
+        }
     }
 
     @Override
