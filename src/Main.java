@@ -31,12 +31,13 @@ public class Main {
             Interprete inter = new Interprete();
 
             ac.visit(tree);
-            inter.visit(tree);
+            //inter.visit(tree);
             if (ac.errors  == (null)){
-                System.out.println("\nCompilación sin errores!");
+
 
                 //Solo si no hay errores que me haga el interprete
                 inter.visit(tree);
+                System.out.println("\nCompilación sin errores!");
 
             }else {
                 System.out.println(ac.errors.replace("null",""));

@@ -64,7 +64,12 @@ public class Almacen {
     public Object getValueArr(String nombre, int index){
         for(Object id: tablaAlmacen)
             if (((Instancia)id).nombre.equals(nombre))
-                return (((Instancia)id).arr[index]);
+                try {
+                    return (((Instancia)id).arr[index]);
+                }catch (Exception e){
+                    System.out.println("Error, el index "+index+" está fuera del rango del array.");
+                }
+
         return null;
     }
 
@@ -85,6 +90,14 @@ public class Almacen {
                 }catch (Exception e){
                     System.out.println("Error, el index "+index+" está fuera del rango del array.");
                 }
+
+    }
+
+    //Metodo para instanciar un arreglo
+    public  void  seInsArr(String nombr,int size){
+        for(Object id: tablaAlmacen)
+            if (((Instancia)id).nombre.equals(nombr))
+                    ((Instancia) id).arr = new Object[size];
 
     }
 

@@ -1,15 +1,25 @@
 
 int t = 5;
+int[] pepito;
+int test(int h, int k){
+    return 3;
+};
 
+pepito = new int[5];
+
+pepito[3] = 7;
+
+print pepito[3];
 
 int imprimir(char letra, int cant){
     cant = cant + cant;
 
-    int t = 0;
+    t = 7;
     print(cant);
-    return cant;
+    return t;
 };
 
-print imprimir('4', 5) + 2;
+print imprimir('d',3);
+print  test(5, 5);
 
 

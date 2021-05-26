@@ -13,10 +13,20 @@ public class AnalisisContextual extends miParserBaseVisitor {
     private TablaSimbolos tabla;
     private TablaSimbolClass tablaClass;
     private List<String> classes = new ArrayList<String>();
-    List<Ident.Params> param = new ArrayList<Ident.Params>();
-     List<String> types = new ArrayList<String>();
+    List<String> types = new ArrayList<String>();
     private String arrTyp = null;
     public String errors;
+    private String funcType = null;
+
+    public static class ParamDec {
+        String name;
+        List<Ident.Params> param;
+
+        public ParamDec(String name, List<Ident.Params> param) {
+            this.name = name;
+            this.param = param;
+        }
+    }
 
    public AnalisisContextual() {
 
@@ -204,8 +214,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitReturnStaAST(miParser.ReturnStaASTContext ctx) {
-
-        this.visit(ctx.returnStatement());
+       this.visit(ctx.returnStatement());
         return null;
     }
 
@@ -243,15 +252,15 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
         if(ctx.type() != null){
             id = this.visit(ctx.type());
-
+            funcType = (String) id;
             if (id.equals("int") || id.equals("boolean") || id.equals("char") || id.equals("string")){
                 Ident t = tabla.buscar(ctx.ID().getText());
                 if (t == null){
-                    tabla.agregarParams(ctx.ID().getSymbol(), (String) id, ctx, param);
+                    tabla.agregarParams(ctx.ID().getSymbol(), (String) id, ctx, (List<Ident.Params>) this.visit(ctx.formalParams()));
                     t = tabla.buscar(ctx.ID().getText());
                     t.initialited = true;
                 }else{
-                    errors += ("Error, la función que desea declarar ya existe;");
+                    errors += ("Error, ya existe una función con este nombre.\n");
                 }
 
             }else{
@@ -266,15 +275,21 @@ public class AnalisisContextual extends miParserBaseVisitor {
         this.visit(ctx.block());
         tabla.closeScope();
 
+        //Validando que el método tenga return
+        if(!ctx.block().getText().contains("return")){
+            errors += "Error, el método debe de tener un retorno.\n";
+        }
+        funcType = null;
+
         return ctx;
     }
 
     @Override
 
     public Object visitFParamsAST(miParser.FParamsASTContext ctx) {
-        param.clear();
-
+        List<Ident.Params> param = new ArrayList<>();
         for (int i = 0; i < ctx.formalParam().size(); i++) {
+
             param.add((Ident.Params) this.visit(ctx.formalParam(i)));
         }
         ctx.cantParams = ctx.formalParam().size();
@@ -285,6 +300,11 @@ public class AnalisisContextual extends miParserBaseVisitor {
     public Object visitFParamAST(miParser.FParamASTContext ctx) {
 
         Object type = this.visit(ctx.type());
+
+        if (type == null)
+            errors += "Error, el tipo de dato del parámetro <"+ctx.ID().getText()+"> no es válido.\n";
+
+        tabla.insertar(ctx.ID().getSymbol(), ctx.type().getText(), null);
         return new Ident.Params( ctx.ID().getText(), (String) type);
     }
 
@@ -325,11 +345,16 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitReturnStmntAST(miParser.ReturnStmntASTContext ctx) {
+        Object val = this.visit(ctx.expression());
 
-        if(this.visit(ctx.expression()) == null){
-            errors +=("Está retornando un dato invalido.\n");
+        if(val == null){
+            errors +=("Error, está retornando un dato invalido.\n");
+        }else if(funcType != null && (!funcType.equals(val))){
+            errors +=("Error, debe de retornar el mismo tipo de la función.\n");
+            return null;
         }
-        this.visit(ctx.expression());
+
+
         return null;
     }
 
@@ -746,7 +771,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                         if (!id.type.equals((test2 + "[]"))) {
                             errors +=("Error, el array es tipo \"" + id.type + "\" y está tratando de inicializar con un tipo de dato diferente\n");
                         } else if (exprType.equals("int")) {
-                            errors +=("Agregando la inicializacion, en el asssingAST a: " + ctx.ID(0).getText()+".\n");
+                            //errors +=("Agregando la inicializacion, en el asssingAST a: " + ctx.ID(0).getText()+".\n");
                             id.initialited = true;
                         }
                     } else if (!id.initialited)
