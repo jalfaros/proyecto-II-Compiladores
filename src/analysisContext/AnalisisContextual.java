@@ -221,6 +221,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
     @Override
     public Object visitFunctionDeclStaAST(miParser.FunctionDeclStaASTContext ctx) {
 
+
         this.visit(ctx.funtionDeclaration());
         return null;
     }
@@ -228,7 +229,11 @@ public class AnalisisContextual extends miParserBaseVisitor {
     @Override
     public Object visitBlockStaAST(miParser.BlockStaASTContext ctx) {
 
-        return this.visit(ctx.block());
+        tabla.openScope();
+                this.visit(ctx.block());
+        tabla.closeScope();
+
+        return null;
     }
 
     @Override
@@ -249,14 +254,14 @@ public class AnalisisContextual extends miParserBaseVisitor {
     public Object visitFunctionDeclAST(miParser.FunctionDeclASTContext ctx) {
 
         Object id = null;
-
+        List<Ident.Params> list = (List<Ident.Params>) this.visit(ctx.formalParams());
         if(ctx.type() != null){
             id = this.visit(ctx.type());
             funcType = (String) id;
             if (id.equals("int") || id.equals("boolean") || id.equals("char") || id.equals("string")){
                 Ident t = tabla.buscar(ctx.ID().getText());
                 if (t == null){
-                    tabla.agregarParams(ctx.ID().getSymbol(), (String) id, ctx, (List<Ident.Params>) this.visit(ctx.formalParams()));
+                    tabla.agregarParams(ctx.ID().getSymbol(), (String) id, ctx, list );
                     t = tabla.buscar(ctx.ID().getText());
                     t.initialited = true;
                 }else{
@@ -268,12 +273,12 @@ public class AnalisisContextual extends miParserBaseVisitor {
             }
         }
 
-        tabla.openScope();
-        if(ctx.formalParams() != null){
-            this.visit(ctx.formalParams());
+        for (Ident.Params params : list) {
+            tabla.borrar(params.name);
         }
-        this.visit(ctx.block());
-        tabla.closeScope();
+
+
+
 
         //Validando que el método tenga return
         if(!ctx.block().getText().contains("return")){
@@ -628,7 +633,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
             }else errors +=("Error, el tipo de dato <"+ctx.type().getText()+"> no corresponde a ningún tipo de dato.\n");
 
         }else if (ctx.type().getText().equals("boolean") || ctx.type().getText().equals("char") || ctx.type().getText().equals("int") || ctx.type().getText().equals("string")) {
-            System.out.println(ctx.expression().getText() + " probando");
             if (ctx.type().getText().equals(this.visit(ctx.expression()))){
                 Ident id = tabla.buscar(ctx.expression().getText());
                 if(id != null) {
@@ -1316,10 +1320,14 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
             }
             for (int i = 0; i < id.listParams.size(); i++) {
+                try {
+                    if(!types.get(i).equals(id.listParams.get(i).type))
+                        errors +=("Error, el parametro es tipo <"+id.listParams.get(i).type+"> y está ingresando un tipo <"+types.get(i)+">.\n");
 
-                if(!types.get(i).equals(id.listParams.get(i).type))
-                    errors +=("Error, el parametro es tipo <"+id.listParams.get(i).type+"> y está ingresando un tipo <"+types.get(i)+">.\n");
 
+                }catch (Exception e){
+                        errors += "Error, el dato que quiere enviar por parámetro es inválido.\n";
+                }
 
             }
             return id.type;

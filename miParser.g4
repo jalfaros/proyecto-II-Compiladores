@@ -20,7 +20,7 @@ statement:
 
 block                     : KEYIZQ ( statement )* KEYDER 												#blockAST;
 
-funtionDeclaration        : type ID PIZQ ( formalParams )? PDER block PyCOMA 							#functionDeclAST;
+funtionDeclaration        : type ID PIZQ ( formalParams )? PDER block        							#functionDeclAST;
 
 formalParams
 locals [int cantParams = 0 ]

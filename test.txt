@@ -1,9 +1,4 @@
-
-int t = 5;
 int[] pepito;
-int test(int h, int k){
-    return 3;
-};
 int cant;
 
 pepito = new int[5];
@@ -11,18 +6,28 @@ pepito = new int[5];
 pepito[4] = 7;
 
 int imprimir(char letra, int cant){
-    cant = cant + cant;
 
-    t = 7;
+    cant = cant + pepito[4];
+    print cant;
     print(cant);
-    return t;
-};
-pepito[2] = pepito[4];
-print  test(5, 5);
-print imprimir('d',5) + pepito[4]+2;
-string elString = "pepito";
-print(elString.length);
+    return cant;
+}
 
+{print imprimir('d',pepito[4]) + pepito[4]+2;
+int h = 5;
+print cant;}
 
+if(8<10){
+    print "carlitos";
+    int marga = 5;
+    cant = 18;
 
+    {
+    cant + 2;
+    }
 
+}else{
+    print "viva saprissa";
+}
+
+print cant;

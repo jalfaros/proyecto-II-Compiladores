@@ -1,5 +1,6 @@
 package analysisContext;
 
+import interprete.Almacen;
 import org.antlr.v4.runtime.*;
 
 import java.util.LinkedList;
@@ -53,6 +54,14 @@ public class TablaSimbolos {
     public void closeScope(){
         tabla.removeIf(n -> (((Ident)n).nivel == nivelActual));
         nivelActual--;
+    }
+    public  void  borrar(String nombr){
+        for(Object id: tabla)
+            if (((Ident)id).tok.getText().equals(nombr)) {
+                tabla.remove(id);
+                return;
+            }
+
     }
 
     public void imprimir() {

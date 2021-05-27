@@ -67,11 +67,16 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitBlockStaAST(miParser.BlockStaASTContext ctx) {
-        return super.visitBlockStaAST(ctx);
+
+        almacenDatos.openScope();
+        this.visit(ctx.block());
+        almacenDatos.closeScope();
+        return null;
     }
 
     @Override
     public Object visitBlockAST(miParser.BlockASTContext ctx) {
+
         return super.visitBlockAST(ctx);
     }
 
@@ -87,7 +92,6 @@ public class Interprete extends miParserBaseVisitor {
 
         for(miParser.FormalParamContext p: ctx.formalParam()){
             almacenDatos.agregarInstancia((String) this.visit(p), pilaExpresiones.pop());
-
         }
 
         return null;
@@ -105,7 +109,25 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitIfStmntAST(miParser.IfStmntASTContext ctx) {
-        return super.visitIfStmntAST(ctx);
+        almacenDatos.openScope();
+        try{
+            if(ctx.block(1) != null){
+                if((boolean) this.visit(ctx.expression())){
+                    this.visit(ctx.block(0));
+                }else {
+                    this.visit(ctx.block(1));
+                }
+            }else {
+                if((boolean) this.visit(ctx.expression())){
+                    this.visit(ctx.block(0));
+                }
+            }
+
+        }catch (Exception e){
+            System.out.println("Error, sólo se permiten expresiones booleanas en el if. \n");
+        }
+        almacenDatos.closeScope();
+        return null;
     }
 
     @Override
@@ -367,10 +389,11 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitFunctionCallAST(miParser.FunctionCallASTContext ctx) {
-        Object result = null;
+
         //Busco el metodo
         Almacen.Instancia i = almacenDatos.getInstancia(ctx.ID().getText());
 
+        almacenDatos.openScope();
         if(ctx.actualParams() != null){
             //Lidiar con los parámetros - guardo los valores de los parametros en la pila
             this.visit(ctx.actualParams());
@@ -381,6 +404,10 @@ public class Interprete extends miParserBaseVisitor {
 
         //Visitar el cuerpo del método
         visit(((miParser.FunctionDeclASTContext)i.ctx).block());
+
+
+        almacenDatos.closeScope();
+
 
         return pilaExpresiones.pop() ;
     }
