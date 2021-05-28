@@ -104,6 +104,12 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitWhileStmmtAST(miParser.WhileStmmtASTContext ctx) {
+
+        almacenDatos.openScope();
+        while ((Boolean) this.visit(ctx.expression())){
+            this.visit(ctx.block());
+        }
+        almacenDatos.closeScope();
         return super.visitWhileStmmtAST(ctx);
     }
 

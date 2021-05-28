@@ -5,29 +5,9 @@ pepito = new int[5];
 
 pepito[4] = 7;
 
-int imprimir(char letra, int cant){
 
-    cant = cant + pepito[4];
-    print cant;
-    print(cant);
-    return cant;
+while(pepito[4] < 12){
+
+    print pepito[4];
+    pepito[4] = pepito[4]+1;
 }
-
-{print imprimir('d',pepito[4]) + pepito[4]+2;
-int h = 5;
-print cant;}
-
-if(8<10){
-    print "carlitos";
-    int marga = 5;
-    cant = 18;
-
-    {
-    cant + 2;
-    }
-
-}else{
-    print "viva saprissa";
-}
-
-print cant;
