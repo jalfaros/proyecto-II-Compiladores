@@ -44,9 +44,11 @@ public class Almacen {
 
     //Esto es como un buscar
     public Instancia getInstancia(String nombr){
-        for(Instancia id: tablaAlmacen)
+        for(Instancia id: tablaAlmacen){
+            //System.out.println(id.nombre);
             if (id.nombre.equals(nombr))
                 return id;
+        }
         return null;
     }
 

@@ -150,27 +150,58 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitClassDelcAST(miParser.ClassDelcASTContext ctx) {
-        return super.visitClassDelcAST(ctx);
+        almacenDatos.agregarInstancia(ctx.ID().getText(), null, ctx);
+        return null;
     }
 
     @Override
     public Object visitClassVariableDeclAST(miParser.ClassVariableDeclASTContext ctx) {
+        String tipo = (String) visit(ctx.stype());
 
-        return super.visitClassVariableDeclAST(ctx);
+        if(ctx.ASSIGN() == null) {
+            if (tipo.contains("[")){
+                //Guardando el array
+                this.almacenDatos.agregarInstancia(pilaExpresiones.pop()+"."+ctx.ID().getText(), new Object[0]);
+            }
+            else {
+                switch (tipo) {
+                    case "int" -> this.almacenDatos.agregarInstancia(pilaExpresiones.pop()+"."+ctx.ID().getText(), 0);
+                    case "char" -> this.almacenDatos.agregarInstancia(pilaExpresiones.pop()+"."+ctx.ID().getText(), ' ');
+                    case "string" -> this.almacenDatos.agregarInstancia(pilaExpresiones.pop()+"."+ctx.ID().getText(), "");
+                    case "boolean" -> this.almacenDatos.agregarInstancia(pilaExpresiones.pop()+"."+ctx.ID().getText(), false);
+                    //Guardando la clase
+                    //default -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), ctx.type().getText());
+                }
+            }
+        }else {
+            if(tipo.equals("int") || tipo.equals("char") || tipo.equals("string") || tipo.equals("boolean")){
+                this.almacenDatos.agregarInstancia(pilaExpresiones.pop()+"."+ctx.ID().getText(), this.visit(ctx.expression()));
+            }else if(tipo.equals("int[]") || tipo.equals("char[]") || tipo.equals("string[]") || tipo.equals("boolean[]")){
+                this.almacenDatos.agregarInstancia(pilaExpresiones.pop()+"."+ctx.ID().getText(),new Object[(Integer) this.visit(ctx.expression())]);
+            }
+        }
+        //almacenDatos.agregarInstancia();
+        return null;
     }
 
     @Override
     public Object visitVariableDeclAST(miParser.VariableDeclASTContext ctx) {
         String tipo = (String) visit(ctx.type());
 
-        if(ctx.ASSIGN() == null){
-            switch (tipo) {
-                case "int" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), 0);
-                case "char" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), ' ');
-                case "string" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), "");
-                case "boolean" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), false);
-                //Agrego por defecto un array que no tiene instancia
-                default -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), new Object[0]);
+        if(ctx.ASSIGN() == null) {
+            if (tipo.contains("[")){
+                //Guardando el array
+                this.almacenDatos.agregarInstancia(ctx.ID().getText(), new Object[0]);
+            }
+            else {
+                switch (tipo) {
+                    case "int" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), 0);
+                    case "char" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), ' ');
+                    case "string" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), "");
+                    case "boolean" -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), false);
+                    //Guardando la clase
+                    default -> this.almacenDatos.agregarInstancia(ctx.ID().getText(), ctx.type().getText());
+                }
             }
         }else {
             if(tipo.equals("int") || tipo.equals("char") || tipo.equals("string") || tipo.equals("boolean")){
@@ -178,6 +209,20 @@ public class Interprete extends miParserBaseVisitor {
             }else if(tipo.equals("int[]") || tipo.equals("char[]") || tipo.equals("string[]") || tipo.equals("boolean[]")){
 
                 this.almacenDatos.agregarInstancia(ctx.ID().getText(),new Object[(Integer) this.visit(ctx.expression())]);
+            }else{
+                //Guardando la instancia de la clase
+                this.almacenDatos.agregarInstancia(ctx.ID().getText(), ctx.type().getText());
+
+                //Busco la clase
+                Almacen.Instancia ins = almacenDatos.getInstancia(ctx.type().getText());
+
+                for (int i = 0; i <((Integer) (((miParser.ClassDelcASTContext)ins.ctx).classVariableDeclaration().size())) ; i++) {
+                    pilaExpresiones.push(ctx.ID().getText());
+
+                    //Hago las visitas en variableDeclaration
+                    this.visit(((miParser.ClassDelcASTContext)ins.ctx).classVariableDeclaration(i));
+                }
+
             }
         }
         return super.visitVariableDeclAST(ctx);
@@ -195,7 +240,7 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitIdTypeAST(miParser.IdTypeASTContext ctx) {
-        return super.visitIdTypeAST(ctx);
+        return ctx.getText();
     }
 
     @Override
@@ -212,13 +257,29 @@ public class Interprete extends miParserBaseVisitor {
     public Object visitAsssignAST(miParser.AsssignASTContext ctx) {
         if(ctx.PUNTO() == null) {
             //Guardo el nuevo valor que tendrá el array
-            if(ctx.expression().getText().contains("new")){
+            if(ctx.expression().getText().contains("new") && ctx.expression().getText().contains("[")){
                 almacenDatos.setInstancia(ctx.ID(0).getText(), new Object[(Integer) this.visit(ctx.expression())]);
+            }else  if(ctx.expression().getText().contains("new") && ctx.expression().getText().contains("(")){
+
+                Almacen.Instancia in = almacenDatos.getInstancia(ctx.ID(0).getText());
+
+                //Busco la clase
+                Almacen.Instancia ins = almacenDatos.getInstancia((String) in.valor);
+
+                for (int i = 0; i <((Integer) (((miParser.ClassDelcASTContext)ins.ctx).classVariableDeclaration().size())) ; i++) {
+                    pilaExpresiones.push(ctx.ID(0).getText());
+
+                    //Hago las visitas en variableDeclaration
+                    this.visit(((miParser.ClassDelcASTContext)ins.ctx).classVariableDeclaration(i));
+                }
+
             }else {
                 String nombre = ctx.ID(0).getText();
                 Object valor = this.visit(ctx.expression());
                 almacenDatos.setInstancia(nombre, valor);
             }
+        }else{
+            almacenDatos.setInstancia(ctx.ID(0).getText()+"."+ctx.ID(1).getText(), this.visit(ctx.expression()));
         }
         return null;
     }
@@ -333,7 +394,13 @@ public class Interprete extends miParserBaseVisitor {
 
     @Override
     public Object visitPuntIdFactAST(miParser.PuntIdFactASTContext ctx) {
-        return (almacenDatos.getInstancia(ctx.ID(0).getText())).valor;
+
+        if(ctx.ID(1) == null) {
+            return (almacenDatos.getInstancia(ctx.ID(0).getText())).valor;
+        }else {
+
+            return  (almacenDatos.getInstancia(ctx.getText())).valor;
+        }
     }
 
     @Override

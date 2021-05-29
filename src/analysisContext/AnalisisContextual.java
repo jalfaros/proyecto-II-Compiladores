@@ -207,7 +207,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
         this.visit(ctx.whileStatement());
         tabla.closeScope();
 
-        System.out.println("\n imprimiendo desde el while.");
         tabla.imprimir();
         return null;
     }
@@ -220,7 +219,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitFunctionDeclStaAST(miParser.FunctionDeclStaASTContext ctx) {
-
 
         this.visit(ctx.funtionDeclaration());
         return null;
@@ -264,6 +262,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     tabla.agregarParams(ctx.ID().getSymbol(), (String) id, ctx, list );
                     t = tabla.buscar(ctx.ID().getText());
                     t.initialited = true;
+                    this.visit(ctx.block());
                 }else{
                     errors += ("Error, ya existe una función con este nombre.\n");
                 }
@@ -276,9 +275,6 @@ public class AnalisisContextual extends miParserBaseVisitor {
         for (Ident.Params params : list) {
             tabla.borrar(params.name);
         }
-
-
-
 
         //Validando que el método tenga return
         if(!ctx.block().getText().contains("return")){
@@ -351,6 +347,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
     @Override
     public Object visitReturnStmntAST(miParser.ReturnStmntASTContext ctx) {
         Object val = this.visit(ctx.expression());
+        System.out.println("JAJAJA");
 
         if(val == null){
             errors +=("Error, está retornando un dato invalido.\n");
@@ -1051,7 +1048,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                     }
                 }
             }catch (Exception e){
-                errors +=("Error operando con datos no validos!\n");
+                errors +=("Error, operando con datos no validos!\n");
             }
 
         }

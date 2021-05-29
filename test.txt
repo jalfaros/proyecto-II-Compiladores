@@ -4,10 +4,29 @@ int cant;
 pepito = new int[5];
 
 pepito[4] = 7;
-
-
-while(pepito[4] < 12){
-
-    print pepito[4];
-    pepito[4] = pepito[4]+1;
+string x = "hola";
+int imprimir(char letra, int cant){
+    int margarito =7;
+    return margarito;
 }
+
+{print imprimir('d', 2) + pepito[4]+2;
+int h = 5;
+print cant;}
+
+class Prueba{
+
+    int test = 3;
+};
+
+Prueba prue;
+
+
+prue = new Prueba();
+
+prue.test = 3;
+cant = prue.test+3;
+print(prue.test);
+
+
+
