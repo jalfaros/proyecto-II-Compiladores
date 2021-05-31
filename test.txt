@@ -5,16 +5,17 @@ pepito = new int[5];
 
 pepito[4] = 7;
 string x = "hola";
-int imprimir(char letra, int cant){
+
+int imprimir(char letra, int c){
     int margarito =7;
+    print cant;
     return margarito;
 }
-
-
 
 class Prueba{
 
     int test = 3;
+    string cc = "nn";
 };
 
 Prueba prue;
@@ -29,3 +30,7 @@ print(prue.test);
 {print imprimir('3', prue.test) + pepito[4]+2;
 int h = 5;
 print cant;}
+
+char[] chacha = new char[prue.cc];
+
+print chacha.length;

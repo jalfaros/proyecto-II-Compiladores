@@ -34,7 +34,6 @@ public class Main {
             //inter.visit(tree);
             if (ac.errors  == (null)){
 
-
                 //Solo si no hay errores que me haga el interprete
                 inter.visit(tree);
                 System.out.println("\nCompilación sin errores!");

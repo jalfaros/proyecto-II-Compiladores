@@ -15,9 +15,8 @@ public class AnalisisContextual extends miParserBaseVisitor {
     private Stack<Object> pilaExpresiones;
     private TablaSimbolos tabla;
     private TablaSimbolClass tablaClass;
-    private List<String> classes = new ArrayList<String>();
+
     List<String> types = new ArrayList<String>();
-    private String arrTyp = null;
     public String errors;
     private String funcType = null;
 
@@ -475,6 +474,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
                 //VALIDANDO LOS ARRAYS
                 if(ctx.type().getText().equals("boolean[]") || ctx.type().getText().equals("char[]") || ctx.type().getText().equals("int[]") || ctx.type().getText().equals("string[]")){
                     //VALINDO QUE SEA DEL MISMO TIPO
+                    this.visit(ctx.expression());
                     if (ctx.expression().getText().contains(("new"+(ctx.type().getText().replace("[]",""))+"["))) {
                         tabla.insertar(ctx.ID().getText(), ctx.type().getText(), null);
                         idExist = tabla.buscar(ctx.ID().getText());
@@ -750,8 +750,7 @@ public class AnalisisContextual extends miParserBaseVisitor {
         for (int i = 1; i < ctx.term().size(); i++) {
 
             aOperador = ctx.AOP().get(i-1).getText();
-            //id1 = tabla.buscar(ctx.term(i - 1).getText());
-            //id2 = tabla.buscar(ctx.term(i).getText());
+
             if(ctx.term(i).getText().contains("[")){
                 String[] parts = ctx.term(i).getText().split("\\[");
                 String part1 = parts[0]; // 123
@@ -1068,41 +1067,13 @@ public class AnalisisContextual extends miParserBaseVisitor {
 
     @Override
     public Object visitArrAllocationExprAST(miParser.ArrAllocationExprASTContext ctx) {
+
         Object attr = this.visit(ctx.expression());
         Ident id = null;
         if(attr != null){
             if (!((String) attr).equals("int")){
                 errors +=("Error, la inicialización de los arreglos deben de ser siempre de tipo int y se esta usando  tipo \""+attr+"\"\n");
             }
-        }else if (ctx.expression().getText().contains(".")) {
-            Ident idExp2 = tabla.buscar(ctx.expression().getText());
-            String[] parts = ctx.expression().getText().split("\\.");
-            String point1 = parts[0]; // 123
-            String point2 = parts[1]; // 654321
-            Ident idExist = null;
-            idExist = tabla.buscar(point1);
-            if (idExist != null) {//Busco en la tabla local si existe
-                if (idExist.initialited) { //Viendo si la vara fue inicializada
-                    String clase = idExist.type;
-                    idExist = tablaClass.buscarClaseYVar(clase, point2); // busco la clase en la tabla de clases
-                    if (idExist != null) {
-                        if (clase.equals(idExist.className)) {//valida que la variable sea de esa clase al existir.
-                            //Valido que exista esa varible
-                            if (idExist.type.equals("int")) { //Valido que lo que se va a asignar sean iguales
-                                if (!idExist.initialited) {//Valido que este inicializada
-                                    errors +=("Error, <" + idExist.tok + "> no a sido inicializada.\n");
-                                    arrTyp = null;
-                                }else {
-                                    arrTyp = ctx.expression().getText();
-                                }
-
-                            } else
-                                errors +=("Error, esta tratando de inicializar el array con un tipo <"+ idExist.type +">.\n");
-                        } else errors +=("Error, el dato que quiere asignar al tamaño del array no existe.\n");
-                    } else errors +=("Error, no se encuentra <" + point2 + "> en < " + point1 + " >.\n");
-                } else errors +=("Error, <" + point1 + "> no a sido inicializado.\n");
-            } else errors +=("Error, está asignando al array de tipo <" + ctx.stype().getText() + "> un dato invalido.\n");
-
         } else{
             id = tabla.buscar(ctx.expression().getText());
             if(id != null) {
