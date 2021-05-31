@@ -16,34 +16,24 @@ class Ident{
         }
     }
 
-    Token tok;
+    String  tok;
     String className;
     String type;
     int nivel;
-    int valor; //Este valor hay que cambiarlo
     boolean initialited;
     ParserRuleContext declCtx;
     List<Params> listParams;
 
 
 
-    public Ident(Token t, String tp, ParserRuleContext decl, int nivelActual, String clssNam, List<Params> params ) {
+    public Ident(String t, String tp, ParserRuleContext decl, int nivelActual, String clssNam, List<Params> params ) {
         tok = t;
         type = tp;
         nivel = nivelActual;
-        valor = 0;
         declCtx = decl;
         initialited = false;
         className = clssNam;
         listParams = params;
     }
 
-
-    public void setValue(int v){
-        valor = v;
-    }
-
-    public int getNivel() {
-        return nivel;
-    }
 }

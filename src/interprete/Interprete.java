@@ -110,7 +110,7 @@ public class Interprete extends miParserBaseVisitor {
             this.visit(ctx.block());
         }
         almacenDatos.closeScope();
-        return super.visitWhileStmmtAST(ctx);
+        return null;
     }
 
     @Override
@@ -290,10 +290,16 @@ public class Interprete extends miParserBaseVisitor {
         int index = (Integer) this.visit(ctx.expression(0));
         Object valor = this.visit(ctx.expression(1));
 
+        try{
         Object[] value = (Object[]) almacenDatos.getInstancia(ctx.ID().getText()).valor;
         value[index] = valor;
         almacenDatos.setInstancia(nombre, value);
         return super.visitArrAssignAST(ctx);
+
+        }catch (Exception e){
+            System.out.println("Error, el índice ingresado para el arreglo <"+nombre+"> no está entre el tamaño del arreglo");
+            return super.visitArrAssignAST(ctx);
+        }
     }
 
     @Override

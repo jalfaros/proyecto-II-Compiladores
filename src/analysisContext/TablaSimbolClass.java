@@ -15,7 +15,7 @@ public class TablaSimbolClass {
         this.nivelActualClase = -1;
     }
 
-    public void insertar(Token id, String tipo, ParserRuleContext decl,String className){
+    public void insertar(String id, String tipo, ParserRuleContext decl,String className){
         //no se puede insertar un elemento repetido en el mismo nivel
         Ident i = new Ident(id,tipo,decl, nivelActualClase, className, null);
         tabla.addFirst(i);
@@ -25,7 +25,7 @@ public class TablaSimbolClass {
     {
         Ident temp=null;
         for(Object id : tabla)
-            if (((Ident)id).tok.getText().equals(nombre))
+            if (((Ident)id).tok.equals(nombre))
                 return ((Ident)id);
         return temp;
     }
@@ -43,7 +43,7 @@ public class TablaSimbolClass {
     {
         Ident temp=null;
         for(Object nomb : tabla)
-            if (((Ident)nomb).className.equals(clase) && ((Ident)nomb).tok.getText().equals(variable))
+            if (((Ident)nomb).className.equals(clase) && ((Ident)nomb).tok.equals(variable))
                 return ((Ident)nomb);
         return temp;
     }
@@ -61,8 +61,8 @@ public class TablaSimbolClass {
     public void imprimir() {
         System.out.println("\n----- INICIO TABLA CLASE------ ");
         for (Object o : tabla) {
-            Token s = (Token) ((Ident) o).tok;
-            System.out.println("Nombre: " + s.getText() + " - " + ((Ident) o).nivel + " - " + ((Ident) o).type + " - clase: "+((Ident) o).className);
+            String s = ((Ident) o).tok;
+            System.out.println("Nombre: " + s + " - " + ((Ident) o).nivel + " - " + ((Ident) o).type + " - clase: "+((Ident) o).className);
 /*            if (s.getType() == 0) System.out.println("\tTipo: Indefinido");
             else if (s.getType() == 1) System.out.println("\tTipo: Integer\n");
             else if (s.getType() == 2) System.out.println("\tTipo: String\n");*/

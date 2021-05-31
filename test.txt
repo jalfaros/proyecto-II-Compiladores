@@ -10,9 +10,7 @@ int imprimir(char letra, int cant){
     return margarito;
 }
 
-{print imprimir('d', 2) + pepito[4]+2;
-int h = 5;
-print cant;}
+
 
 class Prueba{
 
@@ -28,5 +26,6 @@ prue.test = 3;
 cant = prue.test+3;
 print(prue.test);
 
-
-
+{print imprimir('3', prue.test) + pepito[4]+2;
+int h = 5;
+print cant;}
